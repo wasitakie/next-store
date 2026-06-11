@@ -6,14 +6,24 @@ import { Plus, Edit, Trash2, Package } from "lucide-react";
 import { deleteProduct } from "@/lib/actions/product";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
+import { localizeProduct } from "@/lib/utils";
 
-export default async function AdminProductsPage() {
+export default async function AdminProductsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
   await requireAdmin();
   const t = await getTranslations("Admin");
 
   const products = await prisma.product.findMany({
     orderBy: { createdAt: "desc" },
   });
+
+  const localizedProducts = products.map((product) =>
+    localizeProduct(product, locale),
+  );
 
   return (
     <div className="space-y-6">
@@ -54,7 +64,7 @@ export default async function AdminProductsPage() {
               </tr>
             </thead>
             <tbody>
-              {products.length === 0 ? (
+              {localizedProducts.length === 0 ? (
                 <tr>
                   <td
                     colSpan={5}
@@ -72,7 +82,7 @@ export default async function AdminProductsPage() {
                   </td>
                 </tr>
               ) : (
-                products.map((product) => (
+                localizedProducts.map((product) => (
                   <tr
                     key={product.id}
                     className="bg-white border-b hover:bg-gray-50/50 transition-colors"
