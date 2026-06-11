@@ -15,6 +15,7 @@ import { Truck, CreditCard, MapPin, User } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
+import { auth, signIn } from "@/lib/auth";
 
 async function createOrderAction() {
   "use server";
@@ -41,6 +42,7 @@ async function createOrderAction() {
 }
 
 export default async function CheckoutPage() {
+  const session = await auth();
   const cart = await getCart();
 
   if (cart.items.length === 0) {
@@ -298,11 +300,19 @@ export default async function CheckoutPage() {
                 </div>
               </CardContent>
               <CardFooter>
-                <form action={createOrderAction} className="w-full">
-                  <Button type="submit" className="w-full" size="lg">
-                    ยืนยันคำสั่งซื้อ
-                  </Button>
-                </form>
+                {session?.user ? (
+                  <form action={createOrderAction} className="w-full">
+                    <Button type="submit" className="w-full" size="lg">
+                      ยืนยันคำสั่งซื้อ
+                    </Button>
+                  </form>
+                ) : (
+                  <div className="mt-4 text-center">
+                    <Link href="/login" className="w-full">
+                      <Button size="lg">ยืนยันคำสั่งซื้อ</Button>
+                    </Link>
+                  </div>
+                )}
                 <div className="mt-4 text-center">
                   <Button variant="ghost" asChild>
                     <Link href="/cart">← กลับไปตะกร้า</Link>

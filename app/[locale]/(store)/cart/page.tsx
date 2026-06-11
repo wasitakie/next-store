@@ -1,4 +1,6 @@
-import { getCart, removeFromCart, clearCart } from "@/lib/cart";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,34 +12,32 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import Image from "next/image";
-import { redirect } from "next/navigation";
+import { useCartStore } from "@/lib/store/useCartStore";
+import { prisma } from "@/lib/prisma";
+import { localizeProduct } from "@/lib/utils";
+import { notFound } from "next/navigation";
 
-async function removeItem(formData: FormData) {
-  const productId = parseInt(formData.get("productId") as string);
+export default function CartPage() {
+  const [mounted, setMounted] = useState(false);
+  const { items, total, updateQuantity, removeItem, clearCart, fetchCart } =
+    useCartStore();
 
-  try {
-    await removeFromCart(productId);
-    redirect("/cart");
-  } catch {
-    console.error("Failed to remove item");
+  useEffect(() => {
+    setMounted(true);
+    fetchCart();
+  }, [fetchCart]);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
+      </div>
+    );
   }
-}
 
-async function clearAllItems() {
-  try {
-    await clearCart();
-  } catch {
-    console.error("Failed to clear cart");
-  }
-  redirect("/cart");
-}
-
-export default async function CartPage() {
-  const cart = await getCart();
-
-  if (cart.items.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="min-h-screen bg-background">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -49,7 +49,11 @@ export default async function CartPage() {
               ตะกร้าสินค้าว่าง
             </h1>
             <p className="text-gray-600 mb-8">ยังไม่มีสินค้าในตะกร้าของคุณ</p>
-            <Button asChild size="lg">
+            <Button
+              asChild
+              size="lg"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+            >
               <Link href="/products">เลือกสินค้าเลย</Link>
             </Button>
           </div>
@@ -66,19 +70,22 @@ export default async function CartPage() {
             ตะกร้าสินค้า
           </h1>
           <p className="text-gray-600">
-            มีสินค้า {cart.items.length} รายการในตะกร้า
+            มีสินค้า {items.length} รายการในตะกร้า
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
-            {cart.items.map((item) => (
-              <Card key={item.id}>
+            {items.map((item) => (
+              <Card
+                key={item.id}
+                className="border border-zinc-200/80 shadow-sm bg-white"
+              >
                 <CardContent className="p-6">
                   <div className="flex gap-4">
                     {/* Product Image */}
-                    <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
+                    <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden shrink-0 border border-zinc-200">
                       {item.image ? (
                         <Image
                           src={item.image}
@@ -107,16 +114,18 @@ export default async function CartPage() {
                     </div>
 
                     {/* Product Details */}
-                    <div className="flex-1">
+                    <div className="flex-1 flex flex-col justify-between">
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <h3 className="font-semibold text-lg">{item.name}</h3>
-                          <p className="text-gray-600">
+                          <h3 className="font-semibold text-lg text-zinc-900 leading-tight">
+                            {item.name}
+                          </h3>
+                          <p className="text-zinc-500 font-medium mt-1">
                             ฿{item.price.toLocaleString()}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold text-lg">
+                          <p className="font-semibold text-lg text-indigo-600">
                             ฿{(item.price * item.quantity).toLocaleString()}
                           </p>
                         </div>
@@ -124,50 +133,47 @@ export default async function CartPage() {
 
                       {/* Quantity Controls */}
                       <div className="flex items-center justify-between mt-4">
-                        <form className="flex items-center gap-2">
-                          <input
-                            type="hidden"
-                            name="productId"
-                            value={item.id}
-                          />
-                          <div className="flex items-center border border-border rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center border border-zinc-200 rounded-lg bg-white">
                             <button
-                              type="submit"
-                              name="quantity"
-                              value={Math.max(1, item.quantity - 1)}
-                              className="p-2 hover:bg-gray-100 rounded-l-lg"
+                              type="button"
+                              onClick={() =>
+                                updateQuantity(item.id, item.quantity - 1)
+                              }
+                              className="p-2 hover:bg-zinc-100 rounded-l-lg cursor-pointer text-zinc-600"
                             >
                               <Minus className="w-4 h-4" />
                             </button>
                             <Input
                               type="number"
-                              name="quantity"
                               value={item.quantity}
                               min="1"
-                              className="w-16 border-0 text-center"
+                              className="w-16 border-0 text-center focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-800 font-semibold"
                               readOnly
                             />
                             <button
-                              type="submit"
-                              name="quantity"
-                              value={item.quantity + 1}
-                              className="p-2 hover:bg-gray-100 rounded-r-lg"
+                              type="button"
+                              onClick={() =>
+                                updateQuantity(item.id, item.quantity + 1)
+                              }
+                              disabled={item.quantity >= item.stock}
+                              className="p-2 hover:bg-zinc-100 rounded-r-lg cursor-pointer text-zinc-600 disabled:opacity-50"
                             >
                               <Plus className="w-4 h-4" />
                             </button>
                           </div>
-                        </form>
+                        </div>
 
-                        <form action={removeItem}>
-                          <input
-                            type="hidden"
-                            name="productId"
-                            value={item.id}
-                          />
-                          <Button type="submit" variant="ghost" size="sm">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </form>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeItem(item.id)}
+                          className="text-zinc-400 hover:text-red-500 transition-colors cursor-pointer hover:bg-transparent"
+                        >
+                          <Trash2 className="w-4 h-4 mr-1.5" />
+                          ลบสินค้า
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -178,41 +184,52 @@ export default async function CartPage() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-8">
+            <Card className="sticky top-8 border border-zinc-200 shadow-sm bg-white">
               <CardHeader>
                 <CardTitle>สรุปคำสั่งซื้อ</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
-                  <span>ราคาสินค้า ({cart.items.length} รายการ)</span>
-                  <span>฿{cart.total.toLocaleString()}</span>
+                  <span>ราคาสินค้า ({items.length} รายการ)</span>
+                  <span>฿{total.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>ค่าจัดส่ง</span>
-                  <span>฿0</span>
+                  <span className="text-green-600 font-medium">ฟรี</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-semibold text-lg">
                   <span>รวมทั้งหมด</span>
-                  <span className="text-primary">
-                    ฿{cart.total.toLocaleString()}
+                  <span className="text-indigo-600">
+                    ฿{total.toLocaleString()}
                   </span>
                 </div>
               </CardContent>
-              <CardFooter className="space-y-3">
-                <Button asChild className="w-full" size="lg">
+              <CardFooter className="flex flex-col space-y-3 w-full">
+                <Button
+                  asChild
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+                  size="lg"
+                >
                   <Link href="/checkout">
                     <ArrowRight className="w-4 h-4 mr-2" />
                     ดำเนินการชำระเงิน
                   </Link>
                 </Button>
-                <form action={clearAllItems}>
-                  <Button type="submit" variant="outline" className="w-full">
-                    ล้างตะกร้า
-                  </Button>
-                </form>
-                <div className="text-center">
-                  <Button variant="ghost" asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={clearCart}
+                  className="w-full border-zinc-200 hover:bg-zinc-50 cursor-pointer"
+                >
+                  ล้างตะกร้า
+                </Button>
+                <div className="text-center w-full">
+                  <Button
+                    variant="ghost"
+                    asChild
+                    className="cursor-pointer text-zinc-500 hover:text-indigo-600 hover:bg-transparent"
+                  >
                     <Link href="/products">
                       <ShoppingBag className="w-4 h-4 mr-2" />
                       เลือกสินค้าเพิ่ม

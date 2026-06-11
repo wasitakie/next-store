@@ -13,6 +13,9 @@
     "subscribe": "สมัครรับข่าวสาร",
     "shopNow": "ซื้อสินค้า"
   },
+  "ProductCard": {
+    "AddToCart": "เพิ่มสินค้าลงในตะกร้า"
+  },
   "ProductFilters": {
     "productsCount": "สินค้า",
     "hideFilters": "ซ่อนตัวกรอง",
@@ -30,7 +33,7 @@
     "sortPriceDesc": "ราคา: มากไปน้อย"
   },
   "LanguageSwitcher": {
-    "label": "เปลี่ยนภาษา", 
+    "label": "เปลี่ยนภาษา",
     "locale": "{locale,select,en{🇬🇧 English}th{🇹🇭 Thailand}other{Unknown}}"
   },
   "Navigation": {

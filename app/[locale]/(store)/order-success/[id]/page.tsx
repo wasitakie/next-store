@@ -30,15 +30,13 @@ async function getOrder(id: number) {
     include: {
       items: {
         include: {
-          user: true,
           product: true,
         },
       },
       user: {
         select: {
           id: true,
-          name_th: true,
-          name_en: true,
+          name: true,
           email: true,
         },
       },

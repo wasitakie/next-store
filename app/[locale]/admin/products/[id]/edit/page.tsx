@@ -5,12 +5,14 @@ import { updateProduct } from "@/lib/actions/product";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
+import { localizeProduct } from "@/lib/utils";
 
 export default async function EditProductPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ locale: string; id: string }>;
 }) {
+  const { locale } = await params;
   await requireAdmin();
 
   const id = parseInt((await params).id, 10);
@@ -21,6 +23,8 @@ export default async function EditProductPage({
   });
 
   if (!product) return notFound();
+
+  const localizedProduct = localizeProduct(product, locale);
 
   const updateProductWithId = updateProduct.bind(null, product.id);
 
@@ -50,7 +54,7 @@ export default async function EditProductPage({
               type="text"
               id="name"
               name="name"
-              defaultValue={product.name}
+              defaultValue={localizedProduct.name}
               required
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
@@ -66,7 +70,7 @@ export default async function EditProductPage({
             <textarea
               id="description"
               name="description"
-              defaultValue={product.description || ""}
+              defaultValue={localizedProduct.description || ""}
               rows={4}
               className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             ></textarea>
@@ -81,7 +85,7 @@ export default async function EditProductPage({
                 type="number"
                 id="price"
                 name="price"
-                defaultValue={product.price}
+                defaultValue={localizedProduct.price}
                 step="0.01"
                 required
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -95,7 +99,7 @@ export default async function EditProductPage({
                 type="number"
                 id="stock"
                 name="stock"
-                defaultValue={product.stock}
+                defaultValue={localizedProduct.stock}
                 required
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
@@ -114,7 +118,7 @@ export default async function EditProductPage({
                 type="text"
                 id="category"
                 name="category"
-                defaultValue={product.category || ""}
+                defaultValue={localizedProduct.category || ""}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
@@ -126,7 +130,7 @@ export default async function EditProductPage({
                 type="url"
                 id="image"
                 name="image"
-                defaultValue={product.image || ""}
+                defaultValue={localizedProduct.image || ""}
                 placeholder="https://..."
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />

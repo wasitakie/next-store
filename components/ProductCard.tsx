@@ -1,3 +1,5 @@
+"use client";
+
 import { Heart, Plus, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,14 +13,17 @@ import {
   CardTitle,
 } from "./ui/card";
 import { LocalizedProduct } from "@/types/product";
-import { useFormatter } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
+import { useCartStore } from "@/lib/store/useCartStore";
 
 export default function ProductCard({
   products,
 }: {
   products: LocalizedProduct[];
 }) {
+  const t = useTranslations("ProductCard");
   const format = useFormatter();
+  const addItem = useCartStore((state) => state.addItem);
   return (
     <div className="container mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 md:gap-4 lg:gap-6">
@@ -89,10 +94,11 @@ export default function ProductCard({
               <CardFooter>
                 <Button
                   disabled={product.stock === 0}
-                  className="w-full h-10 bg-zinc-900 hover:bg-zinc-800 text-white shadow-lg"
+                  className="w-full h-10 bg-zinc-900 hover:bg-zinc-800 text-white shadow-lg cursor-pointer"
+                  onClick={() => addItem(product)}
                 >
                   <Plus className="w-5 h-5" />
-                  Add to Cart
+                  {t("AddToCart")}
                 </Button>
               </CardFooter>
             </Card>

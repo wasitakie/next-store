@@ -1,6 +1,6 @@
 import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
-import { Search as SearchIcon, ShoppingBag, ShoppingCart } from "lucide-react";
+import { Search as SearchIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -14,6 +14,7 @@ import { auth } from "@/lib/auth";
 import { SignoutButton } from "@/components/Button";
 import { getTranslations } from "next-intl/server";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import ShopingCart from "@/components/ShopingCart";
 
 export default async function Navbar() {
   const session = await auth();
@@ -67,9 +68,7 @@ export default async function Navbar() {
               <Button variant="ghost" size="sm">
                 <SearchIcon className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="sm">
-                <ShoppingBag className="w-5 h-5" />
-              </Button>
+              <ShopingCart />
               <Button variant="ghost" size="sm" asChild>
                 {session?.user ? (
                   <DropdownMenu>

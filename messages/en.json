@@ -5,14 +5,16 @@
     "viewAllProducts": "View all products",
     "viewPromotions": "View promotions",
     "shopFromCategories": "Shop from categories",
-    "premiumForYou":"Premium for you",
+    "premiumForYou": "Premium for you",
     "category": "Category",
     "newsletterTitle": "Get news and promotions",
     "newsletterDesc": "Subscribe to our newsletter so you don't miss any special promotions",
     "emailPlaceholder": "Your email",
     "subscribe": "Subscribe",
     "shopNow": "Shop Now"
-    
+  },
+  "ProductCard": {
+    "AddToCart": "Add To Cart"
   },
   "ProductFilters": {
     "productsCount": "Products",

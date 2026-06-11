@@ -13,6 +13,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { localizeProduct } from "@/lib/utils";
+import AddToCartButton from "@/components/AddToCartButton";
 
 async function getRelatedProducts(category: string, currentId: number) {
   const products = await prisma.product.findMany({
@@ -172,14 +173,7 @@ export default async function ProductDetailPage({
 
             {/* Actions */}
             <div className="flex gap-3">
-              <Button
-                size="lg"
-                className="flex-1"
-                disabled={product.stock <= 0}
-              >
-                <ShoppingCart className="w-5 h-5 mr-2" />
-                {product.stock > 0 ? "เพิ่มลงตะกร้า" : "สินค้าหมด"}
-              </Button>
+              <AddToCartButton product={product} />
               <Button variant="outline" size="lg">
                 <Heart className="w-5 h-5 mr-2" />
                 บันทึก

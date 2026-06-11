@@ -5,12 +5,15 @@ import { updateOrderStatus } from "@/lib/actions/order";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
+import { localizeProduct } from "@/lib/utils";
 
 export default async function EditOrderPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ locale: string; id: string }>;
 }) {
+  const { locale } = await params;
+
   await requireAdmin();
 
   const id = parseInt((await params).id, 10);
@@ -22,6 +25,16 @@ export default async function EditOrderPage({
   });
 
   if (!order) return notFound();
+
+  const localizedItems = order.items.map((item) => ({
+    ...item,
+    product: localizeProduct(item.product, locale),
+  }));
+
+  const localizedOrder = {
+    ...order,
+    items: localizedItems,
+  };
 
   const updateOrderStatusWithId = updateOrderStatus.bind(null, order.id);
 
@@ -62,12 +75,12 @@ export default async function EditOrderPage({
             Order Items
           </h3>
           <div className="space-y-2">
-            {order.items.length === 0 ? (
+            {localizedOrder.items.length === 0 ? (
               <p className="text-sm text-gray-500 italic">
                 No items in this order.
               </p>
             ) : (
-              order.items.map((item) => (
+              localizedOrder.items.map((item) => (
                 <div
                   key={item.id}
                   className="flex justify-between items-center bg-gray-50 p-2 rounded text-sm"
