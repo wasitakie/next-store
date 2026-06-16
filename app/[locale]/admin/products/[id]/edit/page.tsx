@@ -45,6 +45,7 @@ export default async function EditProductPage({
         action={updateProductWithId}
         className="bg-white shadow-sm border rounded-lg p-6 space-y-6"
       >
+        <input type="hidden" name="locale" value={locale} />
         <div className="space-y-4">
           <div>
             <label htmlFor="name" className="block text-sm font-medium mb-1">

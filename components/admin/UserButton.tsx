@@ -5,11 +5,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
-  DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SignOutButton } from "@/components/Button"; // Or from wherever it's exported
+import { SignOutButton } from "@/components/Button";
 
 export async function UserButton() {
   const session = await auth();

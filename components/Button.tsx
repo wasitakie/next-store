@@ -3,7 +3,7 @@
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { signOutUser } from "@/lib/auth-actions";
 
-export function SignoutButton() {
+export function SignOutButton() {
   return (
     <DropdownMenuItem
       onClick={async () => {

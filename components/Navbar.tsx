@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { auth } from "@/lib/auth";
-import { SignoutButton } from "@/components/Button";
+import { SignOutButton } from "@/components/Button";
 import { getTranslations } from "next-intl/server";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ShopingCart from "@/components/ShopingCart";
@@ -97,7 +97,7 @@ export default async function Navbar() {
                       </DropdownMenuGroup>
                       <DropdownMenuSeparator />
                       <DropdownMenuGroup>
-                        <SignoutButton />
+                        <SignOutButton />
                       </DropdownMenuGroup>
                     </DropdownMenuContent>
                   </DropdownMenu>

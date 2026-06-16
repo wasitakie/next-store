@@ -4,7 +4,12 @@ import { createProduct } from "@/lib/actions/product";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-export default async function NewProductPage() {
+export default async function NewProductPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
   await requireAdmin();
 
   return (
@@ -24,6 +29,7 @@ export default async function NewProductPage() {
         action={createProduct}
         className="bg-white shadow-sm border rounded-lg p-6 space-y-6"
       >
+        <input type="hidden" name="locale" value={locale} />
         <div className="space-y-4">
           <div>
             <label htmlFor="name" className="block text-sm font-medium mb-1">
