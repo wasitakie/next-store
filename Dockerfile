@@ -12,6 +12,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN pnpm exec prisma generate
+ENV NEXT_PRIVATE_STANDALONE=true
 RUN pnpm build
 
 FROM base AS runner

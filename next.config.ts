@@ -9,7 +9,8 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname, ".."),
   },
-  output: "standalone",
+  output:
+    process.env.NEXT_PRIVATE_STANDALONE === "true" ? "standalone" : undefined,
   images: {
     remotePatterns: [
       {
