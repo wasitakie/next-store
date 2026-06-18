@@ -2,20 +2,22 @@ FROM node:20-alpine AS base
 RUN npm install -g pnpm
 
 FROM base AS deps
-RUN apk add --no-cache libc6-compat openssl
+RUN apk add --no-cache libc6-compat openssl 
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
 FROM base AS builder
+RUN apk add --no-cache openssl
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ENV DATABASE_URL="mysql://build:build@localhost:3306/build"
 RUN pnpm exec prisma generate
-ENV NEXT_PRIVATE_STANDALONE=true
 RUN pnpm build
 
 FROM base AS runner
+RUN apk add --no-cache openssl
 WORKDIR /app
 ENV NODE_ENV=production
 
@@ -25,13 +27,9 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/next.config.*  ./   
-
-# ถ้าใช้ prisma.config.ts (Prisma 6+) ให้เปิด comment นี้
-# COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 RUN chown -R nextjs:nodejs /app
 USER nextjs
