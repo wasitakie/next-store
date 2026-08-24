@@ -156,7 +156,11 @@ export async function clearCart(): Promise<void> {
   cookieStore.delete("cart");
 }
 
-export async function createOrder(userId: number, cart: Cart) {
+export async function createOrder(
+  userId: number,
+  cart: Cart,
+  options: { clearCartAfterCreate?: boolean } = {},
+) {
   if (cart.items.length === 0) {
     throw new Error("Cart is empty");
   }
@@ -208,8 +212,16 @@ export async function createOrder(userId: number, cart: Cart) {
     return order;
   });
 
-  // Clear cart after successful order
-  await clearCart();
+  if (options.clearCartAfterCreate ?? true) {
+    await clearCart();
+  }
 
   return result;
+}
+
+export async function markOrderPaid(orderId: number) {
+  return prisma.order.update({
+    where: { id: orderId },
+    data: { status: "paid" },
+  });
 }

@@ -2,18 +2,19 @@ import { prisma } from "@/lib/prisma";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Heart, Share2, Star, Truck } from "lucide-react";
+import { Heart, Share2, Star, Truck } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { localizeProduct } from "@/lib/utils";
 import AddToCartButton from "@/components/AddToCartButton";
+import { buildSeoMetadata } from "@/lib/seo";
+import type { Metadata } from "next";
 
 async function getRelatedProducts(category: string, currentId: number) {
   const products = await prisma.product.findMany({
@@ -25,6 +26,36 @@ async function getRelatedProducts(category: string, currentId: number) {
     orderBy: { createdAt: "desc" },
   });
   return products;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}): Promise<Metadata> {
+  const { locale, id } = await params;
+  const product = await prisma.product.findUnique({
+    where: { id: Number(id) },
+  });
+
+  if (!product) {
+    return {};
+  }
+
+  const localizedProduct = localizeProduct(product, locale);
+  const fallbackDescription =
+    locale === "en"
+      ? "Quality tech product from NextStore with trusted delivery and warranty."
+      : "สินค้าเทคโนโลยีคุณภาพจาก NextStore พร้อมจัดส่งและรับประกันอุ่นใจ";
+
+  return buildSeoMetadata({
+    locale,
+    path: `/products/${id}`,
+    title: `${localizedProduct.name} | NextStore`,
+    description: localizedProduct.description || fallbackDescription,
+    image: product.image,
+    type: "article",
+  });
 }
 
 export default async function ProductDetailPage({

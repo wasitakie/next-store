@@ -1,4 +1,5 @@
-import { getCart, createOrder } from "@/lib/cart";
+import { getCart, createOrder, clearCart } from "@/lib/cart";
+import { createStripeCheckoutSession } from "@/lib/stripe";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,42 +9,82 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Truck, CreditCard, MapPin, User } from "lucide-react";
+import { Truck, CreditCard, MapPin, User, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { auth, signIn } from "@/lib/auth";
-import { useTranslations } from "next-intl";
+import { auth } from "@/lib/auth";
+import { getTranslations } from "next-intl/server";
+import { buildSeoMetadata } from "@/lib/seo";
+import type { Metadata } from "next";
 
-async function createOrderAction() {
-  "use server";
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const isEnglish = locale === "en";
 
-  try {
-    // Get cart
-    const cart = await getCart();
-
-    if (cart.items.length === 0) {
-      throw new Error("Cart is empty");
-    }
-
-    // For now, we'll use a hardcoded user ID (in production, get from session)
-    const userId = 1; // This should come from authentication
-
-    // Create order
-    const order = await createOrder(userId, cart);
-
-    redirect(`/order-success/${order.id}`);
-  } catch {
-    console.error("Failed to create order");
-    throw new Error("Failed to create order");
-  }
+  return buildSeoMetadata({
+    locale,
+    path: "/checkout",
+    title: isEnglish ? "Checkout | NextStore" : "ชำระเงิน | NextStore",
+    description: isEnglish
+      ? "Review your cart, choose payment, and complete your NextStore order securely."
+      : "ตรวจสอบตะกร้า เลือกวิธีชำระเงิน และสั่งซื้อกับ NextStore อย่างปลอดภัย",
+  });
 }
 
-export default async function CheckoutPage() {
-  const t = useTranslations("checkout");
+async function createOrderAction(formData: FormData) {
+  "use server";
+
+  const session = await auth();
+  const userId = session?.user?.id ? Number(session.user.id) : null;
+
+  if (!userId) {
+    redirect("/login");
+  }
+
+  const cart = await getCart();
+  const paymentMethod = formData.get("paymentMethod")?.toString() || "stripe";
+
+  if (cart.items.length === 0) {
+    throw new Error("Cart is empty");
+  }
+
+  const order = await createOrder(userId, cart, {
+    clearCartAfterCreate: paymentMethod !== "stripe",
+  });
+
+  if (paymentMethod === "stripe") {
+    const locale = formData.get("locale")?.toString() || "th";
+    const stripeSession = await createStripeCheckoutSession({
+      cart,
+      locale,
+      orderId: order.id,
+      userId,
+      customerEmail: session?.user?.email,
+    });
+
+    await clearCart();
+    redirect(stripeSession.url);
+  }
+
+  redirect(`/order-success/${order.id}`);
+}
+
+export default async function CheckoutPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const t = await getTranslations("CheckoutPage");
   const session = await auth();
   const cart = await getCart();
 
@@ -53,30 +94,26 @@ export default async function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {t("checkout")}
+          <h1 className="mb-2 text-3xl font-bold text-gray-900">
+            {t("title")}
           </h1>
-          <p className="text-gray-600">{t("checkoutDescription")}</p>
+          <p className="text-gray-600">{t("description")}</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Checkout Form */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Customer Information */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <div className="space-y-6 lg:col-span-2">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <User className="w-5 h-5" />
-                  {t("customerInformation")}
+                  <User className="h-5 w-5" />
+                  {t("customerInfo")}
                 </CardTitle>
-                <CardDescription>
-                  {t("customerInformationDescription")}
-                </CardDescription>
+                <CardDescription>{t("customerInfoDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">{t("firstName")}</Label>
                     <Input id="firstName" name="firstName" required />
@@ -93,6 +130,7 @@ export default async function CheckoutPage() {
                     name="email"
                     type="email"
                     placeholder="example@email.com"
+                    defaultValue={session?.user?.email || ""}
                     required
                   />
                 </div>
@@ -109,16 +147,13 @@ export default async function CheckoutPage() {
               </CardContent>
             </Card>
 
-            {/* Shipping Address */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <MapPin className="w-5 h-5" />
+                  <MapPin className="h-5 w-5" />
                   {t("shippingAddress")}
                 </CardTitle>
-                <CardDescription>
-                  {t("shippingAddressDescription")}
-                </CardDescription>
+                <CardDescription>{t("shippingAddressDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -126,17 +161,17 @@ export default async function CheckoutPage() {
                   <Input
                     id="address"
                     name="address"
-                    placeholder="123/4 ถนนสุขุมวิท"
+                    placeholder={t("addressPlaceholder")}
                     required
                   />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="city">{t("city")}</Label>
                     <Input
                       id="city"
                       name="city"
-                      placeholder="กรุงเทพมหานคร"
+                      placeholder={t("cityPlaceholder")}
                       required
                     />
                   </div>
@@ -145,7 +180,7 @@ export default async function CheckoutPage() {
                     <Input
                       id="postalCode"
                       name="postalCode"
-                      placeholder="10110"
+                      placeholder={t("postalCodePlaceholder")}
                       required
                     />
                   </div>
@@ -155,41 +190,56 @@ export default async function CheckoutPage() {
                   <Input
                     id="notes"
                     name="notes"
-                    placeholder="ข้อมูลเพิ่มเติมสำหรับการจัดส่ง"
+                    placeholder={t("notesPlaceholder")}
                   />
                 </div>
               </CardContent>
             </Card>
 
-            {/* Payment Method */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5" />
+                  <CreditCard className="h-5 w-5" />
                   {t("paymentMethod")}
                 </CardTitle>
-                <CardDescription>
-                  {t("paymentMethodDescription")}
-                </CardDescription>
+                <CardDescription>{t("paymentMethodDesc")}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent>
                 <div className="space-y-3">
-                  <label className="flex items-center space-x-3 p-4 border border-border rounded-lg cursor-pointer hover:bg-accent">
+                  <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 hover:bg-primary/10">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="stripe"
+                      className="mt-1 text-primary"
+                      defaultChecked
+                    />
+                    <div className="flex-1 space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium">{t("stripeCard")}</p>
+                        <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                          <ShieldCheck className="mr-1 h-3 w-3" />
+                          {t("securePayment")}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {t("stripeCardDesc")}
+                      </p>
+                    </div>
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-4 hover:bg-accent">
                     <input
                       type="radio"
                       name="paymentMethod"
                       value="cod"
                       className="text-primary"
-                      defaultChecked
                     />
                     <div className="flex-1">
-                      <p className="font-medium">{t("cashOnDelivery")}</p>
-                      <p className="text-sm text-gray-600">
-                        {t("cashOnDeliveryDescription")}
-                      </p>
+                      <p className="font-medium">{t("cod")}</p>
+                      <p className="text-sm text-gray-600">{t("codDesc")}</p>
                     </div>
                   </label>
-                  <label className="flex items-center space-x-3 p-4 border border-border rounded-lg cursor-pointer hover:bg-accent">
+                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-4 hover:bg-accent">
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -199,7 +249,7 @@ export default async function CheckoutPage() {
                     <div className="flex-1">
                       <p className="font-medium">{t("bankTransfer")}</p>
                       <p className="text-sm text-gray-600">
-                        {t("bankTransferDescription")}
+                        {t("bankTransferDesc")}
                       </p>
                     </div>
                   </label>
@@ -208,52 +258,36 @@ export default async function CheckoutPage() {
             </Card>
           </div>
 
-          {/* Order Summary */}
           <div className="lg:col-span-1">
             <Card className="sticky top-8">
               <CardHeader>
                 <CardTitle>{t("orderSummary")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Order Items */}
                 <div className="space-y-3">
                   {cart.items.map((item) => (
                     <div key={item.id} className="flex gap-3">
-                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-100">
                         {item.image ? (
                           <Image
                             src={item.image}
                             alt={item.name}
                             width={64}
                             height={64}
-                            className="w-full h-full object-cover"
+                            className="h-full w-full object-cover"
                           />
                         ) : (
-                          <div className="w-8 h-8 text-gray-400">
-                            <svg
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                              className="w-full h-full"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                              />
-                            </svg>
-                          </div>
+                          <CreditCard className="h-8 w-8 text-gray-400" />
                         )}
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-medium text-sm line-clamp-1">
+                        <h4 className="line-clamp-1 text-sm font-medium">
                           {item.name}
                         </h4>
                         <p className="text-sm text-gray-600">
-                          {t("quantity")}: {item.quantity}
+                          {t("quantity", { count: item.quantity })}
                         </p>
-                        <p className="font-semibold text-sm">
+                        <p className="text-sm font-semibold">
                           ฿{(item.price * item.quantity).toLocaleString()}
                         </p>
                       </div>
@@ -263,23 +297,22 @@ export default async function CheckoutPage() {
 
                 <Separator />
 
-                {/* Price Summary */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>{t("subtotal")}</span>
+                    <span>{t("priceTitle")}</span>
                     <span>฿{cart.total.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>{t("shipping")}</span>
+                    <span>{t("shippingTitle")}</span>
                     <span>฿0</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>{t("discount")}</span>
+                    <span>{t("discountTitle")}</span>
                     <span className="text-green-600">-฿0</span>
                   </div>
                   <Separator />
-                  <div className="flex justify-between font-semibold text-lg">
-                    <span>{t("total")}</span>
+                  <div className="flex justify-between text-lg font-semibold">
+                    <span>{t("totalTitle")}</span>
                     <span className="text-primary">
                       ฿{cart.total.toLocaleString()}
                     </span>
@@ -288,46 +321,31 @@ export default async function CheckoutPage() {
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Truck className="w-4 h-4" />
-                    <span>{t("freeShipping")}</span>
+                    <Truck className="h-4 w-4" />
+                    <span>{t("freeShippingGuarantee")}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m0 0l-2-2m2 2l-2-2m6 0a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2z"
-                      />
-                    </svg>
-                    <span>{t("productWarranty")}</span>
+                    <ShieldCheck className="h-4 w-4" />
+                    <span>{t("warrantyGuarantee")}</span>
                   </div>
                 </div>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="flex-col gap-3">
                 {session?.user ? (
                   <form action={createOrderAction} className="w-full">
+                    <input type="hidden" name="locale" value={locale} />
                     <Button type="submit" className="w-full" size="lg">
                       {t("confirmOrder")}
                     </Button>
                   </form>
                 ) : (
-                  <div className="mt-4 text-center">
-                    <Link href="/login" className="w-full">
-                      <Button size="lg">{t("confirmOrder")}</Button>
-                    </Link>
-                  </div>
-                )}
-                <div className="mt-4 text-center">
-                  <Button variant="ghost" asChild>
-                    <Link href="/cart">← {t("backToCart")}</Link>
+                  <Button size="lg" className="w-full" asChild>
+                    <Link href="/login">{t("confirmOrder")}</Link>
                   </Button>
-                </div>
+                )}
+                <Button variant="ghost" asChild>
+                  <Link href="/cart">{t("backToCart")}</Link>
+                </Button>
               </CardFooter>
             </Card>
           </div>

@@ -1,24 +1,34 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Link from "next/link";
-import Image from "next/image";
 import { prisma } from "@/lib/prisma";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { localizeProduct } from "@/lib/utils";
-import ProductCard from "@/components/ProductCard";
 import ProductCarousel from "@/components/ProductCarousel";
 import { Suspense } from "react";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import { Card, CardContent } from "@/components/ui/card";
 import CategoryTitle from "@/components/CategoryTitle";
-import ProductFilters from "@/components/ProductFilters";
 import ProductSection from "@/components/ProductSection";
+import { buildSeoMetadata } from "@/lib/seo";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const isEnglish = locale === "en";
+
+  return buildSeoMetadata({
+    locale,
+    path: "/",
+    title: isEnglish
+      ? "NextStore | IT, Gadgets, and Accessories"
+      : "NextStore | ร้านไอที แกดเจ็ต และอุปกรณ์เสริม",
+    description: isEnglish
+      ? "Shop quality tech products, gadgets, and accessories with fast delivery and trusted warranty."
+      : "เลือกซื้อสินค้าไอที แกดเจ็ต และอุปกรณ์เสริมคุณภาพ พร้อมจัดส่งรวดเร็วและรับประกันอุ่นใจ",
+  });
+}
 
 export default async function Home({
   params,
@@ -27,8 +37,6 @@ export default async function Home({
 }) {
   const { locale } = await params;
   const t = await getTranslations("HomePage");
-  const tCart = await getTranslations("CartPage");
-  const format = await getFormatter();
   const rawProducts = await prisma.product.findMany();
 
   const products = rawProducts.map((p) => localizeProduct(p, locale));

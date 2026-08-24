@@ -1,21 +1,18 @@
 import type { Metadata } from "next";
-import { Prompt } from "next/font/google";
 import "../globals.css";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import { buildSeoMetadata } from "@/lib/seo";
 
-const prompt = Prompt({
-  variable: "--font-geist-sans",
-  subsets: ["latin", "thai"],
-  weight: ["100", "200", "300", "400", "500", "600", "700"],
+export const metadata: Metadata = buildSeoMetadata({
+  locale: "th",
+  path: "/",
+  title: "NextStore | ร้านไอทีและแกดเจ็ตออนไลน์",
+  description:
+    "เลือกซื้อสินค้าไอที แกดเจ็ต และอุปกรณ์เสริมคุณภาพ พร้อมจัดส่งทั่วประเทศและการรับประกันที่ไว้ใจได้",
 });
-
-export const metadata: Metadata = {
-  title: "Next-store",
-  description: "Next-store is a e-commerce platform for selling products",
-};
 
 export default async function RootLayout({
   children,
@@ -34,7 +31,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
-      <body className={`${prompt.className}`}>
+      <body>
         <NextIntlClientProvider messages={messages}>
           {children}
         </NextIntlClientProvider>

@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { markOrderPaid } from "@/lib/cart";
+import { retrieveStripeCheckoutSession } from "@/lib/stripe";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,8 +23,10 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { localizeProduct } from "@/lib/utils";
 import { routing } from "@/i18n/routing";
-import { useFormatter, useTranslations } from "next-intl";
+import { getFormatter, getTranslations } from "next-intl/server";
 import { auth } from "@/lib/auth";
+import { buildSeoMetadata } from "@/lib/seo";
+import type { Metadata } from "next";
 
 async function getOrder(id: number) {
   const order = await prisma.order.findUnique({
@@ -50,21 +54,64 @@ async function getOrder(id: number) {
   return order;
 }
 
-export default async function OrderSuccessPage({
+export async function generateMetadata({
   params,
 }: {
   params: Promise<{ locale: string; id: string }>;
+}): Promise<Metadata> {
+  const { locale, id } = await params;
+  const isEnglish = locale === "en";
+
+  return buildSeoMetadata({
+    locale,
+    path: `/order-success/${id}`,
+    title: isEnglish
+      ? `Order #${id} | NextStore`
+      : `คำสั่งซื้อ #${id} | NextStore`,
+    description: isEnglish
+      ? "View your NextStore order confirmation and payment status."
+      : "ดูการยืนยันคำสั่งซื้อและสถานะการชำระเงินจาก NextStore",
+  });
+}
+
+export default async function OrderSuccessPage({
+  searchParams,
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+  searchParams?: Promise<{ session_id?: string; payment_cancelled?: string }>;
 }) {
   const { locale, id } = await params;
-  const t = useTranslations("OrderSuccess");
-  const format = useFormatter();
-  if (!routing.locales.includes(locale as any)) {
+  const { session_id: sessionId, payment_cancelled: paymentCancelled } =
+    (await searchParams) || {};
+  const t = await getTranslations("OrderSuccess");
+  const format = await getFormatter();
+  if (!routing.locales.includes(locale as (typeof routing.locales)[number])) {
     notFound();
   }
-  const productOrders = await getOrder(parseInt(id));
-  if (!productOrders || productOrders.userId) {
+  const session = await auth();
+  const userId = session?.user?.id ? Number(session.user.id) : null;
+  let productOrders = await getOrder(parseInt(id));
+
+  if (!userId || productOrders.userId !== userId) {
     return notFound(); // ถ้าไม่ใช่เจ้าของ ให้ขึ้น 404 เพื่อความเป็นส่วนตัว
   }
+
+  if (sessionId && productOrders.status === "pending") {
+    const stripeSession = await retrieveStripeCheckoutSession(sessionId);
+    const stripeOrderId = Number(stripeSession.metadata?.orderId);
+    const stripeUserId = Number(stripeSession.metadata?.userId);
+
+    if (
+      stripeSession.payment_status === "paid" &&
+      stripeOrderId === productOrders.id &&
+      stripeUserId === productOrders.userId
+    ) {
+      await markOrderPaid(productOrders.id);
+      productOrders = await getOrder(productOrders.id);
+    }
+  }
+
   const localizedItems = productOrders.items.map((item) => ({
     ...item,
     product: localizeProduct(item.product, locale),
@@ -119,6 +166,9 @@ export default async function OrderSuccessPage({
                   <Badge className={getStatusColor(productOrders.status)}>
                     {t(`status.${productOrders.status}`)}
                   </Badge>
+                  {paymentCancelled ? (
+                    <Badge variant="outline">{t("paymentCancelled")}</Badge>
+                  ) : null}
                   <p className="text-sm text-gray-600">
                     {t("updateAt")}:{" "}
                     {productOrders.updatedAt.toLocaleDateString("th-TH")}
@@ -206,9 +256,7 @@ export default async function OrderSuccessPage({
               <CardContent>
                 <div className="space-y-2">
                   <p className="font-medium">
-                    {productOrders.user?.[
-                      `name_${locale}` as keyof typeof productOrders.user
-                    ] || ""}
+                    {productOrders.user.name || productOrders.user.email}
                   </p>
                   <p className="text-sm text-gray-600">
                     {productOrders.user.email}
@@ -244,7 +292,7 @@ export default async function OrderSuccessPage({
                     <div>
                       <p className="font-medium">{t("payment")}</p>
                       <p className="text-sm text-gray-600">
-                        {t("paymentDescription")}
+                        {t("paymentDesc")}
                       </p>
                     </div>
                   </div>
@@ -253,9 +301,9 @@ export default async function OrderSuccessPage({
                       <Package className="w-4 h-4 text-purple-600" />
                     </div>
                     <div>
-                      <p className="font-medium">{t("preparingProducts")}</p>
+                      <p className="font-medium">{t("preparation")}</p>
                       <p className="text-sm text-gray-600">
-                        {t("preparingProductsDescription")}
+                        {t("preparationDesc")}
                       </p>
                     </div>
                   </div>
@@ -264,9 +312,9 @@ export default async function OrderSuccessPage({
                       <Truck className="w-4 h-4 text-green-600" />
                     </div>
                     <div>
-                      <p className="font-medium">{t("shipping")}</p>
+                      <p className="font-medium">{t("shippingText")}</p>
                       <p className="text-sm text-gray-600">
-                        {t("shippingDescription")}
+                        {t("shippingDesc")}
                       </p>
                     </div>
                   </div>
@@ -301,7 +349,7 @@ export default async function OrderSuccessPage({
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600 mb-4">
-                  {t("helpDescription")}
+                  {t("helpDesc")}
                 </p>
                 <div className="space-y-2 text-sm">
                   <p>📧 support@nextstore.com</p>
