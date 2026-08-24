@@ -233,7 +233,7 @@ export default async function OrderSuccessPage({
             {/* Next Steps */}
             <Card>
               <CardHeader>
-                <CardTitle>ขั้นตอนถัดไป</CardTitle>
+                <CardTitle>{t("nextSteps")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
@@ -242,9 +242,9 @@ export default async function OrderSuccessPage({
                       <CreditCard className="w-4 h-4 text-blue-600" />
                     </div>
                     <div>
-                      <p className="font-medium">ชำระเงิน</p>
+                      <p className="font-medium">{t("payment")}</p>
                       <p className="text-sm text-gray-600">
-                        ชำระเงินตามวิธีที่เลือก
+                        {t("paymentDescription")}
                       </p>
                     </div>
                   </div>
@@ -253,9 +253,9 @@ export default async function OrderSuccessPage({
                       <Package className="w-4 h-4 text-purple-600" />
                     </div>
                     <div>
-                      <p className="font-medium">จัดเตรียมสินค้า</p>
+                      <p className="font-medium">{t("preparingProducts")}</p>
                       <p className="text-sm text-gray-600">
-                        เราจะจัดเตรียมสินค้าของคุณ
+                        {t("preparingProductsDescription")}
                       </p>
                     </div>
                   </div>
@@ -264,9 +264,9 @@ export default async function OrderSuccessPage({
                       <Truck className="w-4 h-4 text-green-600" />
                     </div>
                     <div>
-                      <p className="font-medium">จัดส่งสินค้า</p>
+                      <p className="font-medium">{t("shipping")}</p>
                       <p className="text-sm text-gray-600">
-                        สินค้าจะถูกจัดส่งใน 2-3 วันทำการ
+                        {t("shippingDescription")}
                       </p>
                     </div>
                   </div>
@@ -280,15 +280,15 @@ export default async function OrderSuccessPage({
                 <Button asChild className="w-full">
                   <Link href="/products">
                     <ArrowRight className="w-4 h-4 mr-2" />
-                    ซื้อสินค้าเพิ่ม
+                    {t("continueShopping")}
                   </Link>
                 </Button>
                 <Button variant="outline" asChild className="w-full">
-                  <Link href="/orders">ดูประวัติคำสั่งซื้อ</Link>
+                  <Link href="/orders">{t("viewOrderHistory")}</Link>
                 </Button>
                 <div className="text-center">
                   <Button variant="ghost" asChild>
-                    <Link href="/">กลับหน้าแรก</Link>
+                    <Link href="/">{t("backToHome")}</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -297,11 +297,11 @@ export default async function OrderSuccessPage({
             {/* Contact */}
             <Card>
               <CardHeader>
-                <CardTitle>ต้องการความช่วยเหลือ?</CardTitle>
+                <CardTitle>{t("helpTitle")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600 mb-4">
-                  หากมีคำถามเกี่ยวกับคำสั่งซื้อของคุณ ติดต่อเราได้ที่:
+                  {t("helpDescription")}
                 </p>
                 <div className="space-y-2 text-sm">
                   <p>📧 support@nextstore.com</p>

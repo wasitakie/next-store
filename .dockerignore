@@ -4,9 +4,12 @@ node_modules
 .gitignore
 .env
 .env.*
-!.env.docker.example
 *.md
 .DS_Store
 coverage
 .vscode
 .cursor
+Dockerfile
+.dockerignore
+docker-compose.yml
+

@@ -5,9 +5,9 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {
   /* config options here */
-  output:
-    process.env.NEXT_PRIVATE_STANDALONE === "true" ? "standalone" : undefined,
+  output: "standalone",
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",

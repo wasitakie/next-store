@@ -3,7 +3,12 @@ import { LocalizedProduct } from "@/types/product";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Slider } from "@/components/ui/slider";
-import { RotateCcw, ChevronRight, SlidersHorizontal, ArrowUpDown } from "lucide-react";
+import {
+  RotateCcw,
+  ChevronRight,
+  SlidersHorizontal,
+  ArrowUpDown,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface ProductFiltersProps {
@@ -27,12 +32,14 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
   const maxAvailablePrice = useMemo(() => {
     if (!categories || categories.length === 0) return 5000;
     // Only map price if the items are LocalizedProduct objects
-    const hasPrice = categories.some((p) => typeof p !== "string" && "price" in p);
+    const hasPrice = categories.some(
+      (p) => typeof p !== "string" && "price" in p,
+    );
     if (!hasPrice) return 5000;
     const maxVal = Math.max(
       ...categories
         .filter((p): p is LocalizedProduct => typeof p !== "string")
-        .map((p) => p.price)
+        .map((p) => p.price),
     );
     return Math.ceil(maxVal / 100) * 100 || 5000;
   }, [categories]);
@@ -53,10 +60,10 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
 
   const uniqueCategories = useMemo(() => {
     if (!categories) return [];
-    
+
     // Check if we have standard product list or just strings
     const isStringArray = categories.every((c) => typeof c === "string");
-    
+
     if (isStringArray) {
       return (categories as string[]).map((name) => ({
         name,
@@ -95,7 +102,7 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
       });
       router.push(`?${params.toString()}`, { scroll: false });
     },
-    [router, searchParams]
+    [router, searchParams],
   );
 
   const handleClearAllFilters = () => {
@@ -118,13 +125,17 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
     });
   };
 
-  const handleMinPriceInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMinPriceInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const val = Math.min(Number(e.target.value) || 0, priceRange[1]);
     setPriceRange([val, priceRange[1]]);
     updateFilters({ minPrice: val > 0 ? String(val) : null });
   };
 
-  const handleMaxPriceInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMaxPriceInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const val = Math.max(Number(e.target.value) || 0, priceRange[0]);
     setPriceRange([priceRange[0], val]);
     updateFilters({ maxPrice: val < maxAvailablePrice ? String(val) : null });
@@ -150,7 +161,7 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
       {/* Filter Header */}
       <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-neutral-800">
         <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+          <SlidersHorizontal className="h-5 w-5 text-zinc-900 dark:text-zinc-400" />
           <h2
             id="filter-heading"
             className="text-slate-900 text-lg font-bold dark:text-slate-50"
@@ -191,7 +202,7 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
                 onClick={() => handleSortSelect(option.id)}
                 className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm transition-all duration-200 flex items-center justify-between ${
                   isSelected
-                    ? "bg-indigo-50/80 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 font-semibold border-l-2 border-indigo-600"
+                    ? "bg-zinc-50/80 text-zinc-900 dark:bg-zinc-950/40 dark:text-zinc-300 font-semibold border-l-2 border-zinc-600"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-neutral-400 dark:hover:text-neutral-200 dark:hover:bg-neutral-800/50"
                 }`}
               >
@@ -216,17 +227,19 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
             onClick={() => handleCategorySelect("")}
             className={`w-full text-left px-3.5 py-2 rounded-xl text-sm transition-all duration-200 flex items-center justify-between group ${
               !currentCategory
-                ? "bg-indigo-50/80 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 font-semibold border-l-2 border-indigo-600"
+                ? "bg-zinc-50/80 text-zinc-900 dark:bg-zinc-950/40 dark:text-zinc-300 font-semibold border-l-2 border-zinc-600"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-neutral-400 dark:hover:text-neutral-200 dark:hover:bg-neutral-800/50"
             }`}
           >
             <span>{t("allCategories")}</span>
             {totalProductCount > 0 && (
-              <span className={`text-xs px-2 py-0.5 rounded-full ${
-                !currentCategory
-                  ? "bg-indigo-100 dark:bg-indigo-900/60"
-                  : "bg-slate-100 group-hover:bg-slate-200 dark:bg-neutral-800 dark:group-hover:bg-neutral-700 text-slate-500 dark:text-neutral-400"
-              }`}>
+              <span
+                className={`text-xs px-2 py-0.5 rounded-full ${
+                  !currentCategory
+                    ? "bg-zinc-900 dark:bg-zinc-900/60"
+                    : "bg-slate-100 group-hover:bg-slate-200 dark:bg-neutral-800 dark:group-hover:bg-neutral-700 text-slate-500 dark:text-neutral-400"
+                }`}
+              >
                 {totalProductCount}
               </span>
             )}
@@ -242,20 +255,24 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
                 onClick={() => handleCategorySelect(cat.name)}
                 className={`w-full text-left px-3.5 py-2 rounded-xl text-sm transition-all duration-200 flex items-center justify-between group ${
                   isSelected
-                    ? "bg-indigo-50/80 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 font-semibold border-l-2 border-indigo-600"
+                    ? "bg-zinc-50/80 text-zinc-700 dark:bg-zinc-950/40 dark:text-zinc-300 font-semibold border-l-2 border-zinc-600"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-neutral-400 dark:hover:text-neutral-200 dark:hover:bg-neutral-800/50"
                 }`}
               >
                 <span className="truncate flex items-center gap-1">
-                  <ChevronRight className={`h-3 w-3 transition-transform ${isSelected ? "translate-x-0.5 text-indigo-500" : "opacity-0 group-hover:opacity-100 text-slate-400"}`} />
+                  <ChevronRight
+                    className={`h-3 w-3 transition-transform ${isSelected ? "translate-x-0.5 text-zinc-500" : "opacity-0 group-hover:opacity-100 text-slate-400"}`}
+                  />
                   {cat.name}
                 </span>
                 {cat.count > 0 && (
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    isSelected
-                      ? "bg-indigo-100 dark:bg-indigo-900/60"
-                      : "bg-slate-100 group-hover:bg-slate-200 dark:bg-neutral-800 dark:group-hover:bg-neutral-700 text-slate-500 dark:text-neutral-400"
-                  }`}>
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full ${
+                      isSelected
+                        ? "bg-zinc-100 dark:bg-zinc-900/60"
+                        : "bg-slate-100 group-hover:bg-slate-200 dark:bg-neutral-800 dark:group-hover:bg-neutral-700 text-slate-500 dark:text-neutral-400"
+                    }`}
+                  >
                     {cat.count}
                   </span>
                 )}
@@ -272,7 +289,7 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
         <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
           {t("priceRange")}
         </h3>
-        
+
         {/* Visual Slider */}
         <div className="px-2 py-2">
           <Slider
@@ -329,14 +346,14 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
             {t("inStockOnly")}
           </p>
         </div>
-        
+
         {/* iOS style toggle switch */}
         <button
           type="button"
           onClick={handleStockToggle}
           aria-label={t("inStockOnly")}
-          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
-            currentStock ? "bg-indigo-600" : "bg-slate-200 dark:bg-neutral-800"
+          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 ${
+            currentStock ? "bg-zinc-900" : "bg-slate-200 dark:bg-neutral-800"
           }`}
         >
           <span

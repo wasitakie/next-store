@@ -24,16 +24,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        DATABASE_URL: ${DATABASE_URL}
     container_name: next-store-app
     restart: unless-stopped
+    env_file:
+      - .env
     ports:
       - "3000:3000"
-    environment:
-      DATABASE_URL: mysql://nextstore:nextstore1234@mysql:3306/nextstore
-      AUTH_SECRET: ${AUTH_SECRET:-change-me-in-production}
-      NEXTAUTH_URL: http://localhost:3000
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     depends_on:
       mysql:
         condition: service_healthy

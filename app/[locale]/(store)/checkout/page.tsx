@@ -16,6 +16,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { auth, signIn } from "@/lib/auth";
+import { useTranslations } from "next-intl";
 
 async function createOrderAction() {
   "use server";
@@ -42,6 +43,7 @@ async function createOrderAction() {
 }
 
 export default async function CheckoutPage() {
+  const t = useTranslations("checkout");
   const session = await auth();
   const cart = await getCart();
 
@@ -53,8 +55,10 @@ export default async function CheckoutPage() {
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">ชำระเงิน</h1>
-          <p className="text-gray-600">กรุณากรอกข้อมูลเพื่อดำเนินการสั่งซื้อ</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {t("checkout")}
+          </h1>
+          <p className="text-gray-600">{t("checkoutDescription")}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -65,23 +69,25 @@ export default async function CheckoutPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="w-5 h-5" />
-                  ข้อมูลผู้ซื้อ
+                  {t("customerInformation")}
                 </CardTitle>
-                <CardDescription>กรุณากรอกข้อมูลส่วนตัวของคุณ</CardDescription>
+                <CardDescription>
+                  {t("customerInformationDescription")}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">ชื่อ</Label>
+                    <Label htmlFor="firstName">{t("firstName")}</Label>
                     <Input id="firstName" name="firstName" required />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">นามสกุล</Label>
+                    <Label htmlFor="lastName">{t("lastName")}</Label>
                     <Input id="lastName" name="lastName" required />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">อีเมล</Label>
+                  <Label htmlFor="email">{t("email")}</Label>
                   <Input
                     id="email"
                     name="email"
@@ -91,7 +97,7 @@ export default async function CheckoutPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">เบอร์โทรศัพท์</Label>
+                  <Label htmlFor="phone">{t("phone")}</Label>
                   <Input
                     id="phone"
                     name="phone"
@@ -108,13 +114,15 @@ export default async function CheckoutPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="w-5 h-5" />
-                  ที่อยู่จัดส่ง
+                  {t("shippingAddress")}
                 </CardTitle>
-                <CardDescription>ที่อยู่สำหรับจัดส่งสินค้า</CardDescription>
+                <CardDescription>
+                  {t("shippingAddressDescription")}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="address">ที่อยู่</Label>
+                  <Label htmlFor="address">{t("address")}</Label>
                   <Input
                     id="address"
                     name="address"
@@ -124,7 +132,7 @@ export default async function CheckoutPage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="city">จังหวัด</Label>
+                    <Label htmlFor="city">{t("city")}</Label>
                     <Input
                       id="city"
                       name="city"
@@ -133,7 +141,7 @@ export default async function CheckoutPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="postalCode">รหัสไปรษณีย์</Label>
+                    <Label htmlFor="postalCode">{t("postalCode")}</Label>
                     <Input
                       id="postalCode"
                       name="postalCode"
@@ -143,7 +151,7 @@ export default async function CheckoutPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="notes">หมายเหตุ (ถ้ามี)</Label>
+                  <Label htmlFor="notes">{t("notes")}</Label>
                   <Input
                     id="notes"
                     name="notes"
@@ -158,9 +166,11 @@ export default async function CheckoutPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CreditCard className="w-5 h-5" />
-                  วิธีการชำระเงิน
+                  {t("paymentMethod")}
                 </CardTitle>
-                <CardDescription>เลือกวิธีการชำระเงินที่สะดวก</CardDescription>
+                <CardDescription>
+                  {t("paymentMethodDescription")}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
@@ -173,9 +183,9 @@ export default async function CheckoutPage() {
                       defaultChecked
                     />
                     <div className="flex-1">
-                      <p className="font-medium">เก็บเงินปลายทาง (COD)</p>
+                      <p className="font-medium">{t("cashOnDelivery")}</p>
                       <p className="text-sm text-gray-600">
-                        ชำระเงินเมื่อได้รับสินค้า
+                        {t("cashOnDeliveryDescription")}
                       </p>
                     </div>
                   </label>
@@ -187,9 +197,9 @@ export default async function CheckoutPage() {
                       className="text-primary"
                     />
                     <div className="flex-1">
-                      <p className="font-medium">โอนเงินผ่านธนาคาร</p>
+                      <p className="font-medium">{t("bankTransfer")}</p>
                       <p className="text-sm text-gray-600">
-                        โอนเงินผ่านบัญชีธนาคาร
+                        {t("bankTransferDescription")}
                       </p>
                     </div>
                   </label>
@@ -202,7 +212,7 @@ export default async function CheckoutPage() {
           <div className="lg:col-span-1">
             <Card className="sticky top-8">
               <CardHeader>
-                <CardTitle>สรุปคำสั่งซื้อ</CardTitle>
+                <CardTitle>{t("orderSummary")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Order Items */}
@@ -241,7 +251,7 @@ export default async function CheckoutPage() {
                           {item.name}
                         </h4>
                         <p className="text-sm text-gray-600">
-                          จำนวน {item.quantity}
+                          {t("quantity")}: {item.quantity}
                         </p>
                         <p className="font-semibold text-sm">
                           ฿{(item.price * item.quantity).toLocaleString()}
@@ -256,20 +266,20 @@ export default async function CheckoutPage() {
                 {/* Price Summary */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>ราคาสินค้า</span>
+                    <span>{t("subtotal")}</span>
                     <span>฿{cart.total.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>ค่าจัดส่ง</span>
+                    <span>{t("shipping")}</span>
                     <span>฿0</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>ส่วนลด</span>
+                    <span>{t("discount")}</span>
                     <span className="text-green-600">-฿0</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between font-semibold text-lg">
-                    <span>รวมทั้งหมด</span>
+                    <span>{t("total")}</span>
                     <span className="text-primary">
                       ฿{cart.total.toLocaleString()}
                     </span>
@@ -279,7 +289,7 @@ export default async function CheckoutPage() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Truck className="w-4 h-4" />
-                    <span>จัดส่งฟรีเมื่อซื้อ ฿500 ขึ้นไป</span>
+                    <span>{t("freeShipping")}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <svg
@@ -295,7 +305,7 @@ export default async function CheckoutPage() {
                         d="M9 12l2 2 4-4m0 0l-2-2m2 2l-2-2m6 0a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2z"
                       />
                     </svg>
-                    <span>รับประกันสินค้า 7 วัน</span>
+                    <span>{t("productWarranty")}</span>
                   </div>
                 </div>
               </CardContent>
@@ -303,19 +313,19 @@ export default async function CheckoutPage() {
                 {session?.user ? (
                   <form action={createOrderAction} className="w-full">
                     <Button type="submit" className="w-full" size="lg">
-                      ยืนยันคำสั่งซื้อ
+                      {t("confirmOrder")}
                     </Button>
                   </form>
                 ) : (
                   <div className="mt-4 text-center">
                     <Link href="/login" className="w-full">
-                      <Button size="lg">ยืนยันคำสั่งซื้อ</Button>
+                      <Button size="lg">{t("confirmOrder")}</Button>
                     </Link>
                   </div>
                 )}
                 <div className="mt-4 text-center">
                   <Button variant="ghost" asChild>
-                    <Link href="/cart">← กลับไปตะกร้า</Link>
+                    <Link href="/cart">← {t("backToCart")}</Link>
                   </Button>
                 </div>
               </CardFooter>

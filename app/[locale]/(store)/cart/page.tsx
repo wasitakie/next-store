@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,8 +18,10 @@ import { useCartStore } from "@/lib/store/useCartStore";
 import { prisma } from "@/lib/prisma";
 import { localizeProduct } from "@/lib/utils";
 import { notFound } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 export default function CartPage() {
+  const t = useTranslations("cartPage");
   const [mounted, setMounted] = useState(false);
   const { items, total, updateQuantity, removeItem, clearCart, fetchCart } =
     useCartStore();
@@ -46,15 +48,15 @@ export default function CartPage() {
               <ShoppingBag className="w-full h-full" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              ตะกร้าสินค้าว่าง
+              {t("emptyCart")}
             </h1>
-            <p className="text-gray-600 mb-8">ยังไม่มีสินค้าในตะกร้าของคุณ</p>
+            <p className="text-gray-600 mb-8">{t("emptyCartDescription")}</p>
             <Button
               asChild
               size="lg"
               className="bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
             >
-              <Link href="/products">เลือกสินค้าเลย</Link>
+              <Link href="/products">{t("continueShopping")}</Link>
             </Button>
           </div>
         </div>
@@ -66,11 +68,9 @@ export default function CartPage() {
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            ตะกร้าสินค้า
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("cart")}</h1>
           <p className="text-gray-600">
-            มีสินค้า {items.length} รายการในตะกร้า
+            {t("itemsInCart", { count: items.length })}
           </p>
         </div>
 
@@ -172,7 +172,7 @@ export default function CartPage() {
                           className="text-zinc-400 hover:text-red-500 transition-colors cursor-pointer hover:bg-transparent"
                         >
                           <Trash2 className="w-4 h-4 mr-1.5" />
-                          ลบสินค้า
+                          {t("removeItem")}
                         </Button>
                       </div>
                     </div>
@@ -186,15 +186,15 @@ export default function CartPage() {
           <div className="lg:col-span-1">
             <Card className="sticky top-8 border border-zinc-200 shadow-sm bg-white">
               <CardHeader>
-                <CardTitle>สรุปคำสั่งซื้อ</CardTitle>
+                <CardTitle>{t("orderSummary")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
-                  <span>ราคาสินค้า ({items.length} รายการ)</span>
+                  <span>{t("productPrice", { count: items.length })}</span>
                   <span>฿{total.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>ค่าจัดส่ง</span>
+                  <span>{t("shippingCost")}</span>
                   <span className="text-green-600 font-medium">ฟรี</span>
                 </div>
                 <Separator />
@@ -213,7 +213,7 @@ export default function CartPage() {
                 >
                   <Link href="/checkout">
                     <ArrowRight className="w-4 h-4 mr-2" />
-                    ดำเนินการชำระเงิน
+                    {t("proceedToCheckout")}
                   </Link>
                 </Button>
                 <Button
@@ -222,7 +222,7 @@ export default function CartPage() {
                   onClick={clearCart}
                   className="w-full border-zinc-200 hover:bg-zinc-50 cursor-pointer"
                 >
-                  ล้างตะกร้า
+                  {t("clearCart")}
                 </Button>
                 <div className="text-center w-full">
                   <Button
@@ -232,7 +232,7 @@ export default function CartPage() {
                   >
                     <Link href="/products">
                       <ShoppingBag className="w-4 h-4 mr-2" />
-                      เลือกสินค้าเพิ่ม
+                      {t("continueShopping")}
                     </Link>
                   </Button>
                 </div>
