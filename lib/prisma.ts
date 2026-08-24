@@ -24,7 +24,7 @@ function createAdapter() {
     connectionLimit: 5,
     acquireTimeout: 20_000,
     connectTimeout: 10_000,
-    allowPublicKeyRetrieval: true,
+    ssl: true,
   });
 }
 
