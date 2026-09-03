@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import * as dotenv from "dotenv";
+import { tr } from "zod/v4/locales";
 
 dotenv.config();
 const globalForPrisma = globalThis as unknown as {
@@ -24,7 +25,7 @@ function createAdapter() {
     connectionLimit: 5,
     acquireTimeout: 20_000,
     connectTimeout: 10_000,
-    allowPublicKeyRetrieval: true,
+    ssl: true, // Enable SSL for secure connections
   });
 }
 
