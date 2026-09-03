@@ -41,10 +41,10 @@ export default async function AdminProductsPage({
         </Button>
       </div>
 
-      <div className="bg-white rounded-md border shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b">
+            <thead className="border-b bg-slate-50 text-xs uppercase text-slate-500">
               <tr>
                 <th scope="col" className="px-6 py-4 font-medium">
                   {t("products")}
@@ -85,7 +85,7 @@ export default async function AdminProductsPage({
                 localizedProducts.map((product) => (
                   <tr
                     key={product.id}
-                    className="bg-white border-b hover:bg-gray-50/50 transition-colors"
+                    className="border-b bg-white transition-colors hover:bg-slate-50/70"
                   >
                     <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                       <div className="flex items-center gap-3">
@@ -114,7 +114,7 @@ export default async function AdminProductsPage({
                     </td>
                     <td className="px-6 py-4 text-right">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${product.stock > 10 ? "bg-green-100 text-green-700" : product.stock > 0 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}
+                        className={`rounded-md px-2 py-1 text-xs font-medium ${product.stock > 10 ? "bg-emerald-50 text-emerald-700" : product.stock > 0 ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-700"}`}
                       >
                         {product.stock}
                       </span>
@@ -125,7 +125,7 @@ export default async function AdminProductsPage({
                           asChild
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          className="h-8 w-8 text-slate-500 hover:bg-slate-100 hover:text-slate-950"
                         >
                           <Link href={`/admin/products/${product.id}/edit`}>
                             <Edit className="h-4 w-4" />

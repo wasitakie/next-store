@@ -3,7 +3,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 export default function AdminNavbar() {
   return (
-    <div className="flex items-center p-4 bg-white/50 backdrop-blur-md shadow-sm border-b sticky top-0 z-50">
+    <div className="sticky top-0 z-50 flex items-center border-b border-slate-200 bg-white/85 p-4 backdrop-blur-md">
       <div className="flex w-full justify-end items-center gap-4">
         <LanguageSwitcher />
         <UserButton />

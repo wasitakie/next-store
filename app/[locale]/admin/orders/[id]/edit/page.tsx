@@ -53,7 +53,7 @@ export default async function EditOrderPage({
         </div>
       </div>
 
-      <div className="bg-white shadow-sm border rounded-lg p-6 space-y-6">
+      <div className="space-y-6 rounded-md border border-slate-200 bg-white p-6">
         <div className="grid grid-cols-2 gap-4">
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">
@@ -64,7 +64,7 @@ export default async function EditOrderPage({
           </div>
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">Total</h3>
-            <p className="font-bold text-xl mt-1 text-indigo-600">
+            <p className="mt-1 text-xl font-bold text-orange-600">
               ฿{order.total.toLocaleString()}
             </p>
           </div>
@@ -83,7 +83,7 @@ export default async function EditOrderPage({
               localizedOrder.items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex justify-between items-center bg-gray-50 p-2 rounded text-sm"
+                  className="flex items-center justify-between rounded-md bg-slate-50 p-2 text-sm"
                 >
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{item.product.name}</span>

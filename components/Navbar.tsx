@@ -30,10 +30,24 @@ export default async function Navbar() {
         profile: t("profile"),
         billing: t("billing"),
         settings: t("settings"),
+        wishlist: t("wishlist"),
         login: t("login"),
         register: t("register"),
         language: t("language"),
         search: t("search"),
+        searchTitle: t("searchTitle"),
+        searchDescription: t("searchDescription"),
+        searchPlaceholder: t("searchPlaceholder"),
+        searchSubmit: t("searchSubmit"),
+        searchPopularTitle: t("searchPopularTitle"),
+        searchEmptyHint: t("searchEmptyHint"),
+        searchClose: t("searchClose"),
+        searchSuggestions: [
+          t("searchSuggestionLaptop"),
+          t("searchSuggestionHeadphone"),
+          t("searchSuggestionKeyboard"),
+          t("searchSuggestionMouse"),
+        ],
       }}
     />
   );

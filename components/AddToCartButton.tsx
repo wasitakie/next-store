@@ -21,7 +21,7 @@ export default function AddToCartButton({
   return (
     <Button
       size="lg"
-      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+      className="flex-1 cursor-pointer bg-orange-500 text-white hover:bg-orange-600"
       disabled={product.stock <= 0}
       onClick={() => addItem(product)}
     >

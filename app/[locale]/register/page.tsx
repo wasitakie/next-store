@@ -17,6 +17,7 @@ import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
+import { ErrorState } from "@/components/ui/state";
 
 const getRegisterSchema = (t: (key: string) => string) =>
   z.object({
@@ -103,9 +104,7 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Error รวมจาก Server */}
             {state?.error && (
-              <div className="text-destructive text-sm text-center font-medium">
-                {state.error}
-              </div>
+              <ErrorState title={t("formErrorTitle")} description={state.error} />
             )}
 
             {/* Field: Name */}

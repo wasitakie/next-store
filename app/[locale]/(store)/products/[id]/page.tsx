@@ -7,14 +7,24 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Share2, Star, Truck } from "lucide-react";
+import { Share2, Star, Truck } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { localizeProduct } from "@/lib/utils";
 import AddToCartButton from "@/components/AddToCartButton";
-import { buildSeoMetadata } from "@/lib/seo";
+import WishlistButton from "@/components/WishlistButton";
+import JsonLd from "@/components/JsonLd";
+import { absoluteUrl, buildSeoMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
+
+function productWhere(identifier: string) {
+  const numericId = Number(identifier);
+
+  return Number.isInteger(numericId)
+    ? { OR: [{ id: numericId }, { slug: identifier }] }
+    : { slug: identifier };
+}
 
 async function getRelatedProducts(category: string, currentId: number) {
   const products = await prisma.product.findMany({
@@ -34,8 +44,8 @@ export async function generateMetadata({
   params: Promise<{ locale: string; id: string }>;
 }): Promise<Metadata> {
   const { locale, id } = await params;
-  const product = await prisma.product.findUnique({
-    where: { id: Number(id) },
+  const product = await prisma.product.findFirst({
+    where: productWhere(id),
   });
 
   if (!product) {
@@ -50,7 +60,7 @@ export async function generateMetadata({
 
   return buildSeoMetadata({
     locale,
-    path: `/products/${id}`,
+    path: `/products/${product.slug}`,
     title: `${localizedProduct.name} | NextStore`,
     description: localizedProduct.description || fallbackDescription,
     image: product.image,
@@ -64,16 +74,15 @@ export default async function ProductDetailPage({
   params: Promise<{ locale: string; id: string }>;
 }) {
   const { locale, id } = await params;
-  const rawProducts = await prisma.product.findMany({
-    orderBy: { createdAt: "desc" },
+  const rawProduct = await prisma.product.findFirst({
+    where: productWhere(id),
   });
-  const productChange = rawProducts.map((p) => localizeProduct(p, locale));
-  const product = productChange.find((p) => p.id === parseInt(id));
 
-  if (!product) {
+  if (!rawProduct) {
     notFound();
   }
 
+  const product = localizeProduct(rawProduct, locale);
   const relatedProducts = await getRelatedProducts(
     product.category,
     product.id,
@@ -81,9 +90,70 @@ export default async function ProductDetailPage({
   const localizedRelatedProducts = relatedProducts.map((p) =>
     localizeProduct(p, locale),
   );
+  const productUrl = absoluteUrl(`/${locale}/products/${rawProduct.slug}`);
+  const productImage = rawProduct.image?.startsWith("http")
+    ? rawProduct.image
+    : rawProduct.image
+      ? absoluteUrl(rawProduct.image)
+      : undefined;
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description:
+      product.description ||
+      (locale === "en"
+        ? "Quality tech product from NextStore."
+        : "สินค้าเทคโนโลยีคุณภาพจาก NextStore"),
+    image: productImage ? [productImage] : undefined,
+    sku: String(product.id),
+    category: product.category || undefined,
+    url: productUrl,
+    offers: {
+      "@type": "Offer",
+      url: productUrl,
+      priceCurrency: "THB",
+      price: product.price.toFixed(2),
+      availability:
+        product.stock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
+      seller: {
+        "@type": "Organization",
+        name: "NextStore",
+      },
+    },
+  };
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: locale === "en" ? "Home" : "หน้าแรก",
+        item: absoluteUrl(`/${locale}`),
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: locale === "en" ? "Products" : "สินค้าทั้งหมด",
+        item: absoluteUrl(`/${locale}/products`),
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: product.name,
+        item: productUrl,
+      },
+    ],
+  };
 
   return (
     <div className="min-h-screen bg-background">
+      <JsonLd data={productJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav className="flex mb-8 text-sm">
@@ -101,7 +171,7 @@ export default async function ProductDetailPage({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Product Images */}
           <div>
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden border-slate-200 shadow-none">
               <div className="aspect-square bg-gray-100 flex items-center justify-center">
                 {product.image ? (
                   <Image
@@ -109,7 +179,7 @@ export default async function ProductDetailPage({
                     alt={product.name}
                     width={600}
                     height={600}
-                    loading="lazy"
+                    priority
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -163,10 +233,7 @@ export default async function ProductDetailPage({
                   ฿{product.price.toLocaleString()}
                 </span>
                 {product.stock > 0 ? (
-                  <Badge
-                    variant="default"
-                    className="bg-green-100 text-green-800"
-                  >
+                  <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
                     มีสินค้า
                   </Badge>
                 ) : (
@@ -205,10 +272,13 @@ export default async function ProductDetailPage({
             {/* Actions */}
             <div className="flex gap-3">
               <AddToCartButton product={product} />
-              <Button variant="outline" size="lg">
-                <Heart className="w-5 h-5 mr-2" />
-                บันทึก
-              </Button>
+              <WishlistButton
+                product={product}
+                label="บันทึก"
+                activeLabel="บันทึกแล้ว"
+                showLabel
+                size="lg"
+              />
               <Button variant="outline" size="lg">
                 <Share2 className="w-5 h-5 mr-2" />
                 แชร์
@@ -238,19 +308,16 @@ export default async function ProductDetailPage({
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {localizedRelatedProducts.map((relatedProduct) => (
-                <Card
-                  key={relatedProduct.id}
-                  className="group hover:shadow-lg transition-shadow"
-                >
+                <Card key={relatedProduct.id} className="group border-slate-200">
                   <CardHeader className="p-0">
-                    <div className="aspect-square bg-gray-100 rounded-t-lg flex items-center justify-center overflow-hidden">
+                    <div className="flex aspect-square items-center justify-center overflow-hidden rounded-t-md bg-slate-100">
                       {relatedProduct.image ? (
                         <Image
                           src={relatedProduct.image}
                           alt={relatedProduct.name}
                           width={300}
                           height={300}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          className="h-full w-full object-cover transition-transform group-hover:scale-[1.03]"
                         />
                       ) : (
                         <div className="w-16 h-16 text-gray-400">
@@ -280,7 +347,7 @@ export default async function ProductDetailPage({
                         ฿{relatedProduct.price.toLocaleString()}
                       </span>
                       <Button variant="outline" size="sm" asChild>
-                        <Link href={`/products/${relatedProduct.id}`}>ดู</Link>
+                        <Link href={`/products/${relatedProduct.slug}`}>ดู</Link>
                       </Button>
                     </div>
                   </CardContent>

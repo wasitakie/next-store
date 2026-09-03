@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, Plus, Star } from "lucide-react";
+import { Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -9,12 +9,11 @@ import {
   Card,
   CardContent,
   CardFooter,
-  CardHeader,
-  CardTitle,
 } from "./ui/card";
 import { LocalizedProduct } from "@/types/product";
 import { useFormatter, useTranslations } from "next-intl";
 import { useCartStore } from "@/lib/store/useCartStore";
+import WishlistButton from "@/components/WishlistButton";
 
 export default function ProductCard({
   products,
@@ -26,78 +25,76 @@ export default function ProductCard({
   const addItem = useCartStore((state) => state.addItem);
   return (
     <div className="container mx-auto">
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 md:gap-4 lg:gap-6">
-        {products.map((product) => (
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-5 xl:grid-cols-4">
+        {products.map((product, index) => (
           <div key={product.id}>
-            <Card className="group relative w-full h-full hover:shadow-2xl bg-white border border-gray-200 shadow-lg  hover:scale-105 duration-300 transition-all cursor-pointer overflow-hidden">
-              {/* Wishlist Button */}
-              <div className="absolute top-10 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <Button variant="pink" className="w-8 h-8 rounded-full">
-                  <Heart className="w-5 h-5" />
-                </Button>
+            <Card className="group relative h-full w-full cursor-pointer overflow-hidden border-slate-200 bg-white transition-colors duration-200 hover:border-slate-300">
+              <div className="absolute right-3 top-3 z-10 opacity-100 transition-opacity duration-200 md:opacity-0 md:group-hover:opacity-100">
+                <WishlistButton
+                  product={product}
+                  label={t("addToWishlist")}
+                  activeLabel={t("removeFromWishlist")}
+                  className="h-9 w-9 rounded-md"
+                />
               </div>
-              {/* Badge */}
               <div className="absolute top-3 left-3 z-10">
-                <div className="bg-linear-to-r from-pink-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                  NEW
+                <div className="rounded-md border border-orange-200 bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-700">
+                  {product.stock === 0
+                    ? t("outOfStock")
+                    : product.stock <= 5
+                      ? t("lowStock")
+                      : t("readyToShip")}
                 </div>
               </div>
-              {/* Product Image */}
               <Link href={`/products/${product.slug}`} className="block">
-                <div className="relative overflow-hidden w-full h-48">
+                <div className="relative h-52 w-full overflow-hidden bg-slate-100">
                   <Image
                     src={product.image || ""}
                     alt={product.name}
                     fill
-                    loading="eager"
-                    sizes="(max-width: 1200px) 50vw, 33vw"
-                    className="object-cover object-center group-hover:scale-110 transition-transform duration-500 "
+                    loading={index < 4 ? "eager" : "lazy"}
+                    priority={index < 4}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                    className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
                   />
-                  {/* Gradient Overlay for text contrast */}
-                  <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    {/* Out of Stock Overlay */}
-                    {product.stock === 0 && (
-                      <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-1 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <p className="text-white text-2xl font-bold">
-                          Out of Stock
-                        </p>
-                      </div>
-                    )}
-                    {product.category && (
-                      <span className="absolute top-3 right-3 z-10 bg-white/80 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-semibold">
-                        {product.category}
-                      </span>
-                    )}
-                  </div>
+                  {product.stock === 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/75 backdrop-blur-[1px]">
+                      <p className="rounded-md bg-slate-950 px-3 py-1.5 text-sm font-semibold text-white">
+                        {t("outOfStock")}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </Link>
-              {/* Product Info */}
-              <CardContent className="flex grow flex-col justify-between gap-2 p-4">
+              <CardContent className="flex grow flex-col justify-between gap-3 p-4">
+                {product.category && (
+                  <span className="text-xs font-semibold uppercase text-slate-500">
+                    {product.category}
+                  </span>
+                )}
                 <Link href={`/products/${product.slug}`} className="block">
-                  <h3 className="text-base font-semibold line-clamp-2 leading-tight text-zinc-900 group-hover:text-zinc-600 transition-colors duration-300">
+                  <h3 className="line-clamp-2 text-base font-semibold leading-tight text-slate-950 transition-colors duration-200 group-hover:text-orange-600">
                     {product.name}
                   </h3>
                 </Link>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="text-2xl font-bold text-zinc-900">
+                    <div className="text-xl font-bold text-slate-950">
                       {format.number(product.price, "currency")}
                     </div>
                   </div>
-                  <div className="flex items-center  text-yellow-500">
-                    <Star className="w-5 h-5 fill-current" />
-                    <span className="text-sm text-gray-600">(4.8)</span>
-                  </div>
+                  <span className="text-xs font-semibold text-emerald-600">
+                    {product.stock > 0 ? t("readyToShip") : t("outOfStock")}
+                  </span>
                 </div>
               </CardContent>
-              {/* Add to Cart */}
-              <CardFooter>
+              <CardFooter className="p-4 pt-0">
                 <Button
                   disabled={product.stock === 0}
-                  className="w-full h-10 bg-zinc-900 hover:bg-zinc-800 text-white shadow-lg cursor-pointer"
+                  className="h-10 w-full cursor-pointer"
                   onClick={() => addItem(product)}
                 >
-                  <Plus className="w-5 h-5" />
+                  <Plus className="h-4 w-4" />
                   {t("AddToCart")}
                 </Button>
               </CardFooter>

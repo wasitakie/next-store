@@ -157,8 +157,7 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
     currentSort !== "newest";
 
   return (
-    <div className="flex flex-col gap-6 bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-2xl p-6 shadow-sm">
-      {/* Filter Header */}
+    <div className="flex flex-col gap-6 rounded-md border border-slate-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
       <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-neutral-800">
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="h-5 w-5 text-zinc-900 dark:text-zinc-400" />
@@ -172,7 +171,7 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
         {hasActiveFilters && (
           <button
             type="button"
-            className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded px-2 py-1 transition-all duration-200 hover:bg-red-50 dark:hover:bg-red-950/30"
+            className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-neutral-800"
             aria-label={t("clearAll")}
             onClick={handleClearAllFilters}
           >
@@ -182,7 +181,6 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
         )}
       </div>
 
-      {/* Sorting Tabs Section */}
       <div className="flex flex-col gap-3">
         <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
           <ArrowUpDown className="h-4 w-4 text-slate-400" />
@@ -200,9 +198,9 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
                 key={option.id}
                 type="button"
                 onClick={() => handleSortSelect(option.id)}
-                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm transition-all duration-200 flex items-center justify-between ${
+                className={`flex w-full items-center justify-between rounded-md px-3 py-2.5 text-left text-sm transition-colors duration-200 ${
                   isSelected
-                    ? "bg-zinc-50/80 text-zinc-900 dark:bg-zinc-950/40 dark:text-zinc-300 font-semibold border-l-2 border-zinc-600"
+                    ? "border border-slate-200 bg-slate-50 font-semibold text-slate-950 dark:border-neutral-800 dark:bg-neutral-800 dark:text-neutral-100"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-neutral-400 dark:hover:text-neutral-200 dark:hover:bg-neutral-800/50"
                 }`}
               >
@@ -221,13 +219,12 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
           {t("categories")}
         </h3>
         <div className="flex flex-col gap-1">
-          {/* All Categories Option */}
           <button
             type="button"
             onClick={() => handleCategorySelect("")}
-            className={`w-full text-left px-3.5 py-2 rounded-xl text-sm transition-all duration-200 flex items-center justify-between group ${
+            className={`group flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors duration-200 ${
               !currentCategory
-                ? "bg-zinc-50/80 text-zinc-900 dark:bg-zinc-950/40 dark:text-zinc-300 font-semibold border-l-2 border-zinc-600"
+                ? "border border-slate-200 bg-slate-50 font-semibold text-slate-950 dark:border-neutral-800 dark:bg-neutral-800 dark:text-neutral-100"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-neutral-400 dark:hover:text-neutral-200 dark:hover:bg-neutral-800/50"
             }`}
           >
@@ -236,7 +233,7 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
               <span
                 className={`text-xs px-2 py-0.5 rounded-full ${
                   !currentCategory
-                    ? "bg-zinc-900 dark:bg-zinc-900/60"
+                    ? "bg-slate-950 text-white dark:bg-neutral-100 dark:text-neutral-950"
                     : "bg-slate-100 group-hover:bg-slate-200 dark:bg-neutral-800 dark:group-hover:bg-neutral-700 text-slate-500 dark:text-neutral-400"
                 }`}
               >
@@ -245,7 +242,6 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
             )}
           </button>
 
-          {/* Dynamic Categories */}
           {uniqueCategories.map((cat) => {
             const isSelected = currentCategory === cat.name;
             return (
@@ -253,15 +249,15 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
                 key={cat.name}
                 type="button"
                 onClick={() => handleCategorySelect(cat.name)}
-                className={`w-full text-left px-3.5 py-2 rounded-xl text-sm transition-all duration-200 flex items-center justify-between group ${
+                className={`group flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors duration-200 ${
                   isSelected
-                    ? "bg-zinc-50/80 text-zinc-700 dark:bg-zinc-950/40 dark:text-zinc-300 font-semibold border-l-2 border-zinc-600"
+                    ? "border border-slate-200 bg-slate-50 font-semibold text-slate-950 dark:border-neutral-800 dark:bg-neutral-800 dark:text-neutral-100"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-neutral-400 dark:hover:text-neutral-200 dark:hover:bg-neutral-800/50"
                 }`}
               >
                 <span className="truncate flex items-center gap-1">
                   <ChevronRight
-                    className={`h-3 w-3 transition-transform ${isSelected ? "translate-x-0.5 text-zinc-500" : "opacity-0 group-hover:opacity-100 text-slate-400"}`}
+                    className={`h-3 w-3 transition-transform ${isSelected ? "translate-x-0.5 text-orange-500" : "opacity-0 group-hover:opacity-100 text-slate-400"}`}
                   />
                   {cat.name}
                 </span>
@@ -290,7 +286,6 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
           {t("priceRange")}
         </h3>
 
-        {/* Visual Slider */}
         <div className="px-2 py-2">
           <Slider
             min={0}
@@ -303,7 +298,6 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
           />
         </div>
 
-        {/* Min/Max Manual Inputs */}
         <div className="grid grid-cols-2 gap-3 items-center">
           <div className="relative">
             <span className="absolute left-3 top-2.5 text-xs font-semibold text-slate-400 dark:text-neutral-500">
@@ -315,7 +309,7 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
               min={0}
               max={priceRange[1]}
               onChange={handleMinPriceInputChange}
-              className="pl-10 h-10 rounded-xl bg-slate-50/50 border-slate-200 dark:bg-neutral-800/40 dark:border-neutral-800 text-sm font-medium"
+              className="h-10 rounded-md border-slate-200 bg-slate-50/50 pl-10 text-sm font-medium dark:border-neutral-800 dark:bg-neutral-800/40"
             />
           </div>
           <div className="relative">
@@ -328,7 +322,7 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
               min={priceRange[0]}
               max={maxAvailablePrice}
               onChange={handleMaxPriceInputChange}
-              className="pl-10 h-10 rounded-xl bg-slate-50/50 border-slate-200 dark:bg-neutral-800/40 dark:border-neutral-800 text-sm font-medium"
+              className="h-10 rounded-md border-slate-200 bg-slate-50/50 pl-10 text-sm font-medium dark:border-neutral-800 dark:bg-neutral-800/40"
             />
           </div>
         </div>
@@ -336,7 +330,6 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
 
       <hr className="border-slate-100 dark:border-neutral-800" />
 
-      {/* Stock Availability Section */}
       <div className="flex items-center justify-between py-1">
         <div className="flex flex-col gap-0.5">
           <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
@@ -347,17 +340,16 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
           </p>
         </div>
 
-        {/* iOS style toggle switch */}
         <button
           type="button"
           onClick={handleStockToggle}
           aria-label={t("inStockOnly")}
-          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 ${
-            currentStock ? "bg-zinc-900" : "bg-slate-200 dark:bg-neutral-800"
+          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+            currentStock ? "bg-orange-500" : "bg-slate-200 dark:bg-neutral-800"
           }`}
         >
           <span
-            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
               currentStock ? "translate-x-5" : "translate-x-0"
             }`}
           />

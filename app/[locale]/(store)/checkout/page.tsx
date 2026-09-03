@@ -37,6 +37,7 @@ export async function generateMetadata({
     description: isEnglish
       ? "Review your cart, choose payment, and complete your NextStore order securely."
       : "ตรวจสอบตะกร้า เลือกวิธีชำระเงิน และสั่งซื้อกับ NextStore อย่างปลอดภัย",
+    noIndex: true,
   });
 }
 
@@ -217,7 +218,7 @@ export default async function CheckoutPage({
                     <div className="flex-1 space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="font-medium">{t("stripeCard")}</p>
-                        <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                    <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
                           <ShieldCheck className="mr-1 h-3 w-3" />
                           {t("securePayment")}
                         </Badge>

@@ -71,6 +71,7 @@ export async function generateMetadata({
     description: isEnglish
       ? "View your NextStore order confirmation and payment status."
       : "ดูการยืนยันคำสั่งซื้อและสถานะการชำระเงินจาก NextStore",
+    noIndex: true,
   });
 }
 
@@ -119,17 +120,17 @@ export default async function OrderSuccessPage({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-amber-50 text-amber-700";
       case "paid":
-        return "bg-blue-100 text-blue-800";
+        return "bg-orange-50 text-orange-700";
       case "shipped":
-        return "bg-purple-100 text-purple-800";
+        return "bg-slate-100 text-slate-700";
       case "delivered":
-        return "bg-green-100 text-green-800";
+        return "bg-emerald-50 text-emerald-700";
       case "cancelled":
-        return "bg-red-100 text-red-800";
+        return "bg-red-50 text-red-700";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700";
     }
   };
 
@@ -138,8 +139,8 @@ export default async function OrderSuccessPage({
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Success Header */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-10 h-10 text-green-600" />
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-md border border-emerald-100 bg-emerald-50">
+            <CheckCircle className="h-10 w-10 text-emerald-600" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {t("title")}
@@ -286,8 +287,8 @@ export default async function OrderSuccessPage({
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <CreditCard className="w-4 h-4 text-blue-600" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-orange-50">
+                      <CreditCard className="h-4 w-4 text-orange-600" />
                     </div>
                     <div>
                       <p className="font-medium">{t("payment")}</p>
@@ -297,8 +298,8 @@ export default async function OrderSuccessPage({
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                      <Package className="w-4 h-4 text-purple-600" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-100">
+                      <Package className="h-4 w-4 text-slate-600" />
                     </div>
                     <div>
                       <p className="font-medium">{t("preparation")}</p>
@@ -308,8 +309,8 @@ export default async function OrderSuccessPage({
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <Truck className="w-4 h-4 text-green-600" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-50">
+                      <Truck className="h-4 w-4 text-emerald-600" />
                     </div>
                     <div>
                       <p className="font-medium">{t("shippingText")}</p>

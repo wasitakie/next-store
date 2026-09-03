@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,13 +15,11 @@ import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import Image from "next/image";
 import { useCartStore } from "@/lib/store/useCartStore";
-import { prisma } from "@/lib/prisma";
-import { localizeProduct } from "@/lib/utils";
-import { notFound } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { CartPageSkeleton, EmptyState } from "@/components/ui/state";
 
 export default function CartPage() {
-  const t = useTranslations("cartPage");
+  const t = useTranslations("CartPage");
   const [mounted, setMounted] = useState(false);
   const { items, total, updateQuantity, removeItem, clearCart, fetchCart } =
     useCartStore();
@@ -32,33 +30,27 @@ export default function CartPage() {
   }, [fetchCart]);
 
   if (!mounted) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
-      </div>
-    );
+    return <CartPageSkeleton />;
   }
 
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center">
-            <div className="w-24 h-24 text-gray-400 mx-auto mb-6">
-              <ShoppingBag className="w-full h-full" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              {t("emptyCart")}
-            </h1>
-            <p className="text-gray-600 mb-8">{t("emptyCartDescription")}</p>
-            <Button
-              asChild
-              size="lg"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
-            >
-              <Link href="/products">{t("continueShopping")}</Link>
-            </Button>
-          </div>
+        <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+          <EmptyState
+            icon={ShoppingBag}
+            title={t("emptyCart")}
+            description={t("emptyCartDescLong")}
+            action={
+              <Button
+                asChild
+                size="lg"
+                className="cursor-pointer bg-orange-500 text-white hover:bg-orange-600"
+              >
+                <Link href="/products">{t("continueShopping")}</Link>
+              </Button>
+            }
+          />
         </div>
       </div>
     );
@@ -68,9 +60,11 @@ export default function CartPage() {
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("cart")}</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {t("title")}
+          </h1>
           <p className="text-gray-600">
-            {t("itemsInCart", { count: items.length })}
+            {t("itemsCount", { count: items.length })}
           </p>
         </div>
 
@@ -125,7 +119,7 @@ export default function CartPage() {
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold text-lg text-indigo-600">
+                          <p className="font-semibold text-lg text-orange-600">
                             ฿{(item.price * item.quantity).toLocaleString()}
                           </p>
                         </div>
@@ -172,7 +166,7 @@ export default function CartPage() {
                           className="text-zinc-400 hover:text-red-500 transition-colors cursor-pointer hover:bg-transparent"
                         >
                           <Trash2 className="w-4 h-4 mr-1.5" />
-                          {t("removeItem")}
+                          {t("deleteItem")}
                         </Button>
                       </div>
                     </div>
@@ -190,17 +184,17 @@ export default function CartPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
-                  <span>{t("productPrice", { count: items.length })}</span>
+                  <span>{t("itemsPrice", { count: items.length })}</span>
                   <span>฿{total.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>{t("shippingCost")}</span>
-                  <span className="text-green-600 font-medium">ฟรี</span>
+                  <span>{t("shipping")}</span>
+                  <span className="text-green-600 font-medium">{t("free")}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-semibold text-lg">
-                  <span>รวมทั้งหมด</span>
-                  <span className="text-indigo-600">
+                  <span>{t("total")}</span>
+                  <span className="text-orange-600">
                     ฿{total.toLocaleString()}
                   </span>
                 </div>
@@ -208,12 +202,12 @@ export default function CartPage() {
               <CardFooter className="flex flex-col space-y-3 w-full">
                 <Button
                   asChild
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+                  className="w-full cursor-pointer bg-orange-500 text-white hover:bg-orange-600"
                   size="lg"
                 >
                   <Link href="/checkout">
                     <ArrowRight className="w-4 h-4 mr-2" />
-                    {t("proceedToCheckout")}
+                    {t("checkout")}
                   </Link>
                 </Button>
                 <Button
@@ -228,7 +222,7 @@ export default function CartPage() {
                   <Button
                     variant="ghost"
                     asChild
-                    className="cursor-pointer text-zinc-500 hover:text-indigo-600 hover:bg-transparent"
+                    className="cursor-pointer text-zinc-500 hover:bg-transparent hover:text-orange-600"
                   >
                     <Link href="/products">
                       <ShoppingBag className="w-4 h-4 mr-2" />

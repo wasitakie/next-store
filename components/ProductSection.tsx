@@ -4,9 +4,16 @@ import ProductCard from "@/components/ProductCard";
 import ProductFilters from "@/components/ProductFilters";
 import { LocalizedProduct } from "@/types/product";
 import { Button } from "./ui/button";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import {
+  PackageSearch,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Search,
+  X,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { EmptyState } from "@/components/ui/state";
 
 interface ProductSectionProps {
   products: LocalizedProduct[];
@@ -19,10 +26,12 @@ export default function ProductSection({
 }: ProductSectionProps) {
   const [filterOpen, setFilterOpen] = useState(true);
   const t = useTranslations("ProductFilters");
+  const router = useRouter();
   const searchParams = useSearchParams();
 
   // Parse search params for filtering
   const category = searchParams.get("category") || "";
+  const query = searchParams.get("q")?.trim() || "";
   const minPrice = Number(searchParams.get("minPrice")) || 0;
   const maxPrice = Number(searchParams.get("maxPrice")) || Infinity;
   const stockOnly = searchParams.get("stock") === "true";
@@ -33,9 +42,18 @@ export default function ProductSection({
     let result = [...products];
 
     // Filter by Category
+    if (query) {
+      const normalizedQuery = query.toLowerCase();
+      result = result.filter((p) =>
+        [p.name, p.category, p.description]
+          .filter(Boolean)
+          .some((value) => value.toLowerCase().includes(normalizedQuery)),
+      );
+    }
+
     if (category) {
       result = result.filter(
-        (p) => p.category?.toLowerCase() === category.toLowerCase()
+        (p) => p.category?.toLowerCase() === category.toLowerCase(),
       );
     }
 
@@ -62,20 +80,44 @@ export default function ProductSection({
     }
 
     return result;
-  }, [products, category, minPrice, maxPrice, stockOnly, sort]);
+  }, [products, query, category, minPrice, maxPrice, stockOnly, sort]);
+
+  const clearSearchQuery = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("q");
+    const nextQuery = params.toString();
+    router.push(nextQuery ? `?${nextQuery}` : "?", { scroll: false });
+  };
 
   return (
-    <div className="flex flex-col gap-8 container mx-auto">
-      {/* Product Filters - completely hidden when collapsed on desktop */}
+    <div className="container mx-auto flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <p className="text-slate-900 font-semibold dark:text-slate-50">
-          {filteredProducts.length} {t("productsCount")}
-        </p>
+        <div className="min-w-0">
+          <p className="text-slate-900 font-semibold dark:text-slate-50">
+            {filteredProducts.length} {t("productsCount")}
+          </p>
+          {query && (
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+              <span className="inline-flex items-center gap-2 rounded-md border border-orange-200 bg-orange-50 px-3 py-1 font-medium text-orange-700">
+                <Search className="h-3.5 w-3.5" />
+                {t("searchResultFor", { query })}
+              </span>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1 font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-950"
+                onClick={clearSearchQuery}
+              >
+                <X className="h-3.5 w-3.5" />
+                {t("clearSearch")}
+              </button>
+            </div>
+          )}
+        </div>
         <Button
           variant="outline"
           size="sm"
           onClick={() => setFilterOpen(!filterOpen)}
-          className="flex items-center gap-2 border-zinc-200 bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-neutral-900 dark:border-neutral-800"
+          className="flex items-center gap-2 border-slate-200 bg-white transition-colors duration-200 ease-in-out dark:border-neutral-800 dark:bg-neutral-900"
           aria-label={filterOpen ? "Hide filters" : "Show filters"}
         >
           {filterOpen ? (
@@ -101,16 +143,17 @@ export default function ProductSection({
         >
           <ProductFilters categories={categories} />
         </aside>
-        {/* Product Cards */}
         <main className="flex-1 transition-all duration-300 ">
           {filteredProducts.length > 0 ? (
             <ProductCard products={filteredProducts} />
           ) : (
-            <div className="flex flex-col items-center justify-center py-20 bg-slate-50/50 dark:bg-neutral-900/30 rounded-2xl border border-dashed border-slate-200 dark:border-neutral-800">
-              <p className="text-slate-500 dark:text-neutral-400 font-medium">
-                No products match the selected filters.
-              </p>
-            </div>
+            <EmptyState
+              icon={PackageSearch}
+              title={t("emptyTitle")}
+              description={
+                query ? t("noSearchResults") : t("emptyDescription")
+              }
+            />
           )}
         </main>
       </div>

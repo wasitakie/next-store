@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { buildSeoMetadata } from "@/lib/seo";
+import JsonLd from "@/components/JsonLd";
+import { absoluteUrl, buildSeoMetadata, siteConfig } from "@/lib/seo";
 
 export const metadata: Metadata = buildSeoMetadata({
   locale: "th",
@@ -16,8 +17,25 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "OnlineStore",
+    name: siteConfig.name,
+    url: absoluteUrl("/th"),
+    logo: absoluteUrl(siteConfig.logoPath),
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: "+66-2-123-4567",
+      contactType: "customer support",
+      areaServed: "TH",
+      availableLanguage: ["th", "en"],
+    },
+    sameAs: [],
+  };
+
   return (
     <div>
+      <JsonLd data={organizationJsonLd} />
       <Navbar />
       {children}
       <Footer />

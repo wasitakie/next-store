@@ -16,6 +16,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
+import { ErrorState } from "@/components/ui/state";
 
 const getLoginSchema = (t: (key: string) => string) =>
   z.object({
@@ -92,9 +93,7 @@ export default function LoginPage() {
           </div>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {state?.error && (
-              <div className="text-destructive text-sm text-center font-medium bg-destructive/10 p-2 rounded">
-                {state.error}
-              </div>
+              <ErrorState title={t("formErrorTitle")} description={state.error} />
             )}
             <div className="space-y-2">
               <Label htmlFor="email">{t("email")}</Label>

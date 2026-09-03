@@ -15,11 +15,10 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import { Card, CardContent } from "@/components/ui/card";
-import { number } from "zod";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/badge";
-import { AlignRight, MoveRightIcon } from "lucide-react";
+import { MoveRightIcon, ShoppingCart } from "lucide-react";
+import { useCartStore } from "@/lib/store/useCartStore";
 interface ProductCarouselProps {
   product: LocalizedProduct[];
 }
@@ -52,7 +51,7 @@ export default function ProductCarousel({ product }: ProductCarouselProps) {
   }
 
   return (
-    <div className="relative  w-full bg-linear-to-br from-zinc-900 via-zinc-900 to-zinc-900 text-white">
+    <div className="group relative w-full border-b border-slate-200 bg-slate-950 text-white">
       <Carousel
         setApi={setApi}
         className="w-full"
@@ -75,8 +74,8 @@ export default function ProductCarousel({ product }: ProductCarouselProps) {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white/80 dark:bg-black/80 backdrop-blur-sm border-none shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-neutral-800 dark:text-white hover:bg-white hover:scale-105" />
-        <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white/80 dark:bg-black/80 backdrop-blur-sm border-none shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-neutral-800 dark:text-white hover:bg-white hover:scale-105" />
+        <CarouselPrevious className="absolute left-4 top-1/2 h-10 w-10 -translate-y-1/2 rounded-md border border-white/20 bg-white/90 text-slate-900 opacity-0 transition-opacity duration-200 hover:bg-white group-hover:opacity-100" />
+        <CarouselNext className="absolute right-4 top-1/2 h-10 w-10 -translate-y-1/2 rounded-md border border-white/20 bg-white/90 text-slate-900 opacity-0 transition-opacity duration-200 hover:bg-white group-hover:opacity-100" />
       </Carousel>
       {count > 1 && (
         <div className="mt-4 absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2 sm:bottom-6">
@@ -109,8 +108,11 @@ interface FeaturedSlideProps {
 function FeaturedSlide({ product }: FeaturedSlideProps) {
   const t = useTranslations("HomePage");
   const format = useFormatter();
+  const addItem = useCartStore((state) => state.addItem);
+  const inStock = product.stock > 0;
+
   return (
-    <div className="flex flex-col min-h-100 md:min-h-125 md:flex-row lg:min-h-150">
+    <div className="flex min-h-100 flex-col md:min-h-125 md:flex-row lg:min-h-150">
       <div className="relative h-64  w-full md:h-auto md:w-3/5">
         {product.image ? (
           <Image
@@ -126,13 +128,13 @@ function FeaturedSlide({ product }: FeaturedSlideProps) {
             <span className="text-4xl font-semibold">no image</span>
           </div>
         )}
-        <div className="absolute inset-0 bg-linear-to-r from-transparent via-transparent to-zinc-900/90 dark:to-zinc-950/90 hidden md:block"></div>
-        <div className="absolute inset-0 bg-linear-to-r from-zinc-900/90 via-transparent to-transparent  md:hidden"></div>
+        <div className="absolute inset-0 hidden bg-linear-to-r from-transparent via-transparent to-slate-950 md:block"></div>
+        <div className="absolute inset-0 bg-slate-950/55 md:hidden"></div>
       </div>
-      <div className="flex flex-col justify-center  w-full md:w-2/5 px-6 py-8 md:px-10 lg:px-16 ">
+      <div className="flex w-full flex-col justify-center px-6 py-8 md:w-2/5 md:px-10 lg:px-16">
         {product.category && (
           <Badge
-            className="mb-4 w-fit bg-blue-900/75 text-white "
+            className="mb-4 w-fit border border-white/15 bg-white/10 text-white hover:bg-white/10"
             variant="secondary"
           >
             {product.category}
@@ -141,21 +143,47 @@ function FeaturedSlide({ product }: FeaturedSlideProps) {
         <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl lg:text-4xl">
           {product.name}
         </h2>
-        <p className="mt-4 line-clamp-3 text-sm text-zinc-300 sm:text-base lg:txt-lg">
+        <p className="mt-4 line-clamp-3 text-sm text-slate-300 sm:text-base lg:text-lg">
           {product.description}
         </p>
-        <p className="mt-6 text-3xl font-bold text-white">
-          {format.number(product.price, "currency")}
-        </p>
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <p className="text-3xl font-bold text-white">
+            {format.number(product.price, "currency")}
+          </p>
+          <span
+            className={cn(
+              "rounded-md px-2.5 py-1 text-xs font-semibold",
+              inStock
+                ? "bg-emerald-400/15 text-emerald-200"
+                : "bg-red-400/15 text-red-200",
+            )}
+          >
+            {inStock
+              ? `${t("readyToShip")} · ${t("inStockCount", {
+                  count: product.stock,
+                })}`
+              : t("outOfStock")}
+          </span>
+        </div>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Button
             size="lg"
+            className="bg-orange-500 text-white hover:bg-orange-600"
+            disabled={!inStock}
+            onClick={() => addItem(product)}
+          >
+            <ShoppingCart className="h-4 w-4" />
+            {inStock ? t("addToCart") : t("outOfStock")}
+          </Button>
+          <Button
+            size="lg"
             asChild
-            className="bg-orange-500 hover:bg-amber-400 text-white"
+            variant="outline"
+            className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950"
           >
             <Link href={`/products/${product.slug}`}>
-              {t("shopNow")}
-              <MoveRightIcon className="ml-2 h-4 w-4" />
+              {t("viewDetails")}
+              <MoveRightIcon className="h-4 w-4" />
             </Link>
           </Button>
         </div>

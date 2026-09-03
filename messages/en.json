@@ -12,12 +12,25 @@
     "emailPlaceholder": "Your email",
     "subscribe": "Subscribe",
     "shopNow": "Shop Now",
+    "addToCart": "Add to cart",
+    "viewDetails": "View details",
+    "outOfStock": "Out of stock",
+    "readyToShip": "Ready to ship",
+    "featuredProducts": "Recommended products",
+    "featuredProductsDesc": "Shop popular products directly with clear pricing and stock status.",
     "inStockCount": "{count} in stock",
+    "freeShipping": "Free shipping over ฿500",
+    "securePayment": "Secure payment",
     "fastDelivery": "Fast delivery",
     "trustedWarranty": "Trusted warranty"
   },
   "ProductCard": {
-    "AddToCart": "Add To Cart"
+    "AddToCart": "Add To Cart",
+    "addToWishlist": "Add to wishlist",
+    "removeFromWishlist": "Remove from wishlist",
+    "readyToShip": "Ready to ship",
+    "lowStock": "Low stock",
+    "outOfStock": "Out of stock"
   },
   "ProductFilters": {
     "productsCount": "Products",
@@ -33,15 +46,22 @@
     "sortBy": "Sort By",
     "sortNewest": "Newest",
     "sortPriceAsc": "Price: Low to High",
-    "sortPriceDesc": "Price: High to Low"
+    "sortPriceDesc": "Price: High to Low",
+    "emptyTitle": "No matching products",
+    "emptyDescription": "Try clearing filters or using a broader search term to see products ready to order.",
+    "searchResultFor": "Search: {query}",
+    "clearSearch": "Clear search",
+    "noSearchResults": "No products match this search.",
+    "noFilterResults": "No products match the selected filters."
   },
   "LanguageSwitcher": {
     "label": "Change Language",
-    "locale": "{locale,select,en{🇬🇧 English}th{🇹🇭 Thailand}other{Unknown}}"
+    "locale": "{locale,select,en{English}th{ภาษาไทย}other{Unknown}}"
   },
   "Navigation": {
     "home": "Home",
     "products": "Products",
+    "wishlist": "Wishlist",
     "about": "About Us",
     "contact": "Contact",
     "manageProducts": "Manage Products",
@@ -51,7 +71,110 @@
     "login": "Login",
     "register": "Register",
     "language": "Language",
-    "search": "Search"
+    "search": "Search",
+    "searchTitle": "Search NextStore products",
+    "searchDescription": "Type a product name, category, or the kind of device you need, then jump straight into matching products.",
+    "searchPlaceholder": "Search laptops, headphones, keyboards, or accessories",
+    "searchSubmit": "Search",
+    "searchPopularTitle": "Popular searches",
+    "searchEmptyHint": "Tip: try searching by product type, brand, or use case like work, gaming, or portable.",
+    "searchClose": "Close search",
+    "searchSuggestionLaptop": "Laptop",
+    "searchSuggestionHeadphone": "Headphones",
+    "searchSuggestionKeyboard": "Keyboard",
+    "searchSuggestionMouse": "Mouse"
+  },
+  "WishlistPage": {
+    "eyebrow": "Saved items",
+    "title": "Product Wishlist",
+    "itemsCount": "{count} saved items",
+    "emptyTitle": "Your wishlist is empty",
+    "emptyDescription": "Tap the heart on a product to save it for later, then come back when you are ready to add it to your cart.",
+    "continueShopping": "Continue Shopping",
+    "addToCart": "Add to Cart",
+    "remove": "Remove item",
+    "viewProduct": "View Product",
+    "outOfStock": "Out of Stock",
+    "clearAll": "Clear All"
+  },
+  "AboutPage": {
+    "eyebrow": "About us",
+    "title": "A tech store curated for practical products and confident shopping",
+    "description": "NextStore is an online store for IT products, gadgets, and accessories that are easy to choose, useful in daily life, and supported from browsing through after-sales care.",
+    "shopProducts": "Shop Products",
+    "contactUs": "Contact Us",
+    "heroCardTitle": "NextStore curates products from a real user's point of view",
+    "heroCardDescription": "We care about quality, value, clear product details, and dependable delivery for every order.",
+    "processEyebrow": "How we work",
+    "processTitle": "Every step is designed to make buying tech products easier",
+    "step": "Step {count}",
+    "values": {
+      "0": {
+        "title": "Curated products",
+        "description": "We choose IT products and accessories that fit everyday use, with details that help customers decide faster."
+      },
+      "1": {
+        "title": "Fast delivery",
+        "description": "Orders are prepared through a clear workflow so products arrive neatly and on time."
+      },
+      "2": {
+        "title": "After-sales care",
+        "description": "We help with product questions, orders, shipping, and warranty topics in a clear and helpful way."
+      }
+    },
+    "process": {
+      "0": {
+        "title": "Select what fits customers",
+        "description": "We organize categories and product details so customers can compare options and find what they need quickly."
+      },
+      "1": {
+        "title": "Check orders before shipping",
+        "description": "Each order is prepared with clear pricing, quantities, and shipping information before fulfillment."
+      },
+      "2": {
+        "title": "Help when questions come up",
+        "description": "Whether customers need product advice or post-order support, the NextStore team is ready to help."
+      }
+    }
+  },
+  "ContactPage": {
+    "eyebrow": "Contact us",
+    "title": "Talk to NextStore about products, orders, and support",
+    "description": "Need product advice, shipping updates, or after-sales help? Send us a message and our team will get back to you.",
+    "formTitle": "Send us a message",
+    "formDescription": "Our team will reply through the contact details you provide.",
+    "name": "Name",
+    "namePlaceholder": "Enter your name",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "subject": "Subject",
+    "subjectPlaceholder": "For example, product question or order status",
+    "message": "Message",
+    "messagePlaceholder": "Tell us what you need help with",
+    "sendMessage": "Send Message",
+    "hoursTitle": "Business hours",
+    "weekday": "Monday - Friday",
+    "weekdayHours": "09:00 - 18:00",
+    "weekend": "Saturday - Sunday",
+    "weekendHours": "10:00 - 16:00",
+    "supportNote": "For order questions, include your order number or the email used at checkout so we can help faster.",
+    "channels": {
+      "0": {
+        "title": "Phone",
+        "value": "02-123-4567",
+        "description": "Best for urgent order questions."
+      },
+      "1": {
+        "title": "Email",
+        "value": "info@nextstore.com",
+        "description": "Send product details, order questions, or supporting files."
+      },
+      "2": {
+        "title": "Address",
+        "value": "Bangkok, Thailand",
+        "description": "NextStore customer service and coordination center."
+      }
+    }
   },
   "Footer": {
     "storeDesc": "A reliable online store. Quality products at affordable prices.",
@@ -93,6 +216,7 @@
     "registering": "Creating account...",
     "haveAccount": "Already have an account?",
     "loginHere": "Login here",
+    "formErrorTitle": "Unable to continue",
     "errors": {
       "invalidEmail": "Invalid email format",
       "requiredPassword": "Password is required",
@@ -121,6 +245,7 @@
     "clearCart": "Clear Cart",
     "shopMore": "Shop More",
     "loading": "Loading products...",
+    "loadingDescription": "Preparing your cart details.",
     "viewCart": "View Cart",
     "totalPriceCount": "Total ({count} items)",
     "netTotal": "Net Total"

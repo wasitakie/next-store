@@ -29,13 +29,13 @@ export default function AdminSidebar() {
   ];
 
   return (
-    <div className="space-y-4 py-4 flex flex-col h-full bg-gray-900 text-white shadow-xl">
+    <div className="flex h-full flex-col space-y-4 border-r border-slate-200 bg-white py-4 text-slate-700">
       <div className="px-3 py-2 flex-1">
         <Link href="/admin" className="flex items-center pl-3 mb-14">
-          <div className="relative w-8 h-8 mr-4 bg-indigo-500 rounded-lg flex items-center justify-center">
-            <Store className="text-white w-5 h-5" />
+          <div className="relative mr-4 flex h-8 w-8 items-center justify-center rounded-md bg-slate-950">
+            <Store className="h-5 w-5 text-orange-400" />
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-950">
             {t("adminTitle")}
           </h1>
         </Link>
@@ -45,11 +45,11 @@ export default function AdminSidebar() {
               key={route.href}
               href={route.href}
               className={cn(
-                "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition",
+                "group flex w-full cursor-pointer justify-start rounded-md p-3 text-sm font-medium transition hover:bg-slate-100 hover:text-slate-950",
                 pathname === route.href ||
                   (pathname.startsWith(route.href) && route.href !== "/admin")
-                  ? "text-white bg-white/10"
-                  : "text-zinc-400",
+                  ? "bg-slate-950 text-white hover:bg-slate-900 hover:text-white"
+                  : "text-slate-500",
               )}
             >
               <div className="flex items-center flex-1">
@@ -59,7 +59,7 @@ export default function AdminSidebar() {
                     pathname === route.href ||
                       (pathname.startsWith(route.href) &&
                         route.href !== "/admin")
-                      ? "text-indigo-400"
+                      ? "text-orange-300"
                       : "",
                   )}
                 />
@@ -69,10 +69,10 @@ export default function AdminSidebar() {
           ))}
         </div>
       </div>
-      <div className="px-3 py-4 mt-auto border-t border-gray-800">
+      <div className="mt-auto border-t border-slate-200 px-3 py-4">
         <Link
           href="/"
-          className="text-sm group flex p-3 w-full justify-start font-medium cursor-pointer text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition"
+          className="group flex w-full cursor-pointer justify-start rounded-md p-3 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-950"
         >
           <div className="flex items-center flex-1">
             <Store className="h-5 w-5 mr-3" />

@@ -21,14 +21,14 @@ export async function UserButton() {
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-full h-10 w-10 border shadow-sm"
+          className="h-10 w-10 rounded-md border border-slate-200 bg-white"
         >
           <Avatar className="h-10 w-10">
             <AvatarImage
               src={session.user.image || ""}
               alt={session.user.name || "Admin"}
             />
-            <AvatarFallback className="bg-indigo-100 text-indigo-700 font-semibold">
+            <AvatarFallback className="bg-orange-50 font-semibold text-orange-700">
               {session.user.name?.charAt(0).toUpperCase() || "A"}
             </AvatarFallback>
           </Avatar>

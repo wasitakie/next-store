@@ -21,9 +21,11 @@ import {
 import { SignOutButton } from "@/components/Button";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ShopingCart from "@/components/ShopingCart";
+import SearchDialog from "@/components/Search";
 import { cn } from "@/lib/utils";
 import {
   Home,
+  Heart,
   Info,
   Mail,
   Menu,
@@ -33,7 +35,8 @@ import {
   Sparkles,
   UserRound,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useWishlistStore } from "@/lib/store/useWishlistStore";
 
 type NavLink = {
   label: string;
@@ -49,7 +52,16 @@ type NavbarLabels = {
   login: string;
   register: string;
   language: string;
+  wishlist: string;
   search: string;
+  searchTitle: string;
+  searchDescription: string;
+  searchPlaceholder: string;
+  searchSubmit: string;
+  searchPopularTitle: string;
+  searchEmptyHint: string;
+  searchClose: string;
+  searchSuggestions: string[];
 };
 
 export type NavbarUser = {
@@ -72,18 +84,20 @@ export default function NavbarClient({
 }: NavbarClientProps) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const isAdmin = user?.role === "admin";
   const allLinks = isAdmin
     ? [...links, { label: labels.manageProducts, href: "/admin/products" }]
     : links;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/85 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-white/75">
-      <nav className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-3 sm:px-5 lg:h-[4.5rem] lg:px-8">
+    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl supports-[backdrop-filter]:bg-white/80">
+      <nav className="container mx-auto flex h-16 items-center gap-6 px-4 sm:px-6 lg:h-[4.5rem] lg:px-8">
         <div className="flex min-w-0 flex-1 items-center gap-2 lg:flex-none">
           <MobileMenu
             isOpen={isOpen}
             setIsOpen={setIsOpen}
+            setIsSearchOpen={setIsSearchOpen}
             links={allLinks}
             labels={labels}
             pathname={pathname}
@@ -93,7 +107,7 @@ export default function NavbarClient({
         </div>
 
         <div className="hidden min-w-0 flex-1 justify-center lg:flex">
-          <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50/90 p-1 shadow-inner">
+          <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 p-1">
             {allLinks.map((link) => (
               <DesktopNavLink
                 key={link.href}
@@ -109,13 +123,16 @@ export default function NavbarClient({
             <LanguageSwitcher />
           </div>
           <Button
+            type="button"
             variant="ghost"
             size="icon"
-            className="hidden h-10 w-10 rounded-full text-slate-700 hover:bg-slate-100 md:inline-flex"
-            aria-label="Search"
+            className="hidden h-10 w-10 rounded-md text-slate-700 hover:bg-slate-100 md:inline-flex"
+            aria-label={labels.search}
+            onClick={() => setIsSearchOpen(true)}
           >
             <Search className="h-5 w-5" />
           </Button>
+          <NavbarWishlistLink label={labels.wishlist} />
           <ShopingCart />
           {user ? (
             <UserMenu user={user} labels={labels} />
@@ -124,6 +141,20 @@ export default function NavbarClient({
           )}
         </div>
       </nav>
+      <SearchDialog
+        open={isSearchOpen}
+        onOpenChange={setIsSearchOpen}
+        labels={{
+          title: labels.searchTitle,
+          description: labels.searchDescription,
+          placeholder: labels.searchPlaceholder,
+          submit: labels.searchSubmit,
+          popularTitle: labels.searchPopularTitle,
+          emptyHint: labels.searchEmptyHint,
+          close: labels.searchClose,
+          suggestions: labels.searchSuggestions,
+        }}
+      />
 
       <div className="hidden border-t border-slate-100 bg-white/70 px-3 py-2 backdrop-blur md:block lg:hidden">
         <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto">
@@ -143,6 +174,7 @@ export default function NavbarClient({
 function MobileMenu({
   isOpen,
   setIsOpen,
+  setIsSearchOpen,
   links,
   labels,
   pathname,
@@ -150,6 +182,7 @@ function MobileMenu({
 }: {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  setIsSearchOpen: (open: boolean) => void;
   links: NavLink[];
   labels: NavbarLabels;
   pathname: string;
@@ -161,7 +194,7 @@ function MobileMenu({
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10 shrink-0 rounded-full text-slate-700 hover:bg-slate-100 md:hidden"
+          className="h-10 w-10 shrink-0 rounded-md text-slate-700 hover:bg-slate-100 md:hidden"
           aria-label="Open navigation"
         >
           <Menu className="h-5 w-5" />
@@ -214,11 +247,27 @@ function MobileMenu({
               <LanguageSwitcher />
             </div>
             <Button
+              type="button"
               variant="outline"
               className="justify-start border-slate-200 bg-white text-slate-700"
+              onClick={() => {
+                setIsOpen(false);
+                setTimeout(() => setIsSearchOpen(true), 150);
+              }}
             >
               <Search className="h-4 w-4" />
               {labels.search}
+            </Button>
+
+            <Button
+              variant="outline"
+              asChild
+              className="justify-start border-slate-200 bg-white text-slate-700"
+            >
+              <Link href="/wishlist" onClick={() => setIsOpen(false)}>
+                <Heart className="h-4 w-4" />
+                {labels.wishlist}
+              </Link>
             </Button>
           </div>
 
@@ -264,9 +313,36 @@ function BrandLink({ brand }: { brand: string }) {
 
 function BrandMark() {
   return (
-    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-950 text-white shadow-sm">
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-950 text-white">
       <Sparkles className="h-4 w-4 text-orange-400" />
     </span>
+  );
+}
+
+function NavbarWishlistLink({ label }: { label: string }) {
+  const [mounted, setMounted] = useState(false);
+  const count = useWishlistStore((state) => state.items.length);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      asChild
+      className="relative h-10 w-10 rounded-md text-slate-700 hover:bg-orange-50 hover:text-orange-600"
+    >
+      <Link href="/wishlist" aria-label={label}>
+        <Heart className="h-5 w-5" />
+        {mounted && count > 0 && (
+          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
+            {count > 9 ? "9+" : count}
+          </span>
+        )}
+      </Link>
+    </Button>
   );
 }
 
@@ -277,8 +353,8 @@ function DesktopNavLink({ link, active }: { link: NavLink; active: boolean }) {
     <Link
       href={link.href}
       className={cn(
-        "inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-medium text-slate-600 transition-colors hover:bg-white hover:text-slate-950",
-        active && "bg-white text-slate-950 shadow-sm",
+        "inline-flex h-10 items-center gap-2 rounded-md px-4 text-sm font-medium text-slate-600 transition-colors hover:bg-white hover:text-slate-950",
+        active && "bg-white text-slate-950 shadow-xs",
       )}
     >
       <Icon className="h-4 w-4" />
@@ -294,7 +370,7 @@ function TabletNavLink({ link, active }: { link: NavLink; active: boolean }) {
     <Link
       href={link.href}
       className={cn(
-        "inline-flex h-9 shrink-0 items-center gap-2 rounded-full px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950",
+        "inline-flex h-9 shrink-0 items-center gap-2 rounded-md px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950",
         active && "bg-slate-950 text-white hover:bg-slate-900 hover:text-white",
       )}
     >
@@ -365,7 +441,7 @@ function UserMenu({
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10 rounded-full border border-slate-200 bg-white p-0 hover:bg-slate-50"
+        className="h-10 w-10 rounded-md border border-slate-200 bg-white p-0 hover:bg-slate-50"
           aria-label="Open account menu"
         >
           <UserAvatar user={user} />
