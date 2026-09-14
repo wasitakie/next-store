@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "@/i18n/routing";
 import { getTranslations } from "next-intl/server";
+import SiteLogo from "@/components/SiteLogo";
 
 export default async function Footer() {
   const t = await getTranslations("Footer");
@@ -11,7 +12,9 @@ export default async function Footer() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h4 className="text-2xl font-bold mb-4 text-slate-950">NextStore</h4>
+              <Link href="/" aria-label="Store" className="mb-4 block w-fit">
+                <SiteLogo className="h-24 w-24 object-contain" sizes="96px" />
+              </Link>
               <p className="text-slate-500">{t("storeDesc")}</p>
             </div>
             <div>

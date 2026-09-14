@@ -22,6 +22,7 @@ import { SignOutButton } from "@/components/Button";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ShopingCart from "@/components/ShopingCart";
 import SearchDialog from "@/components/Search";
+import SiteLogo from "@/components/SiteLogo";
 import { cn } from "@/lib/utils";
 import {
   Home,
@@ -205,9 +206,9 @@ function MobileMenu({
         className="flex w-[88vw] max-w-sm flex-col border-r border-slate-200 bg-white p-0"
       >
         <SheetHeader className="border-b border-slate-100 px-5 py-4 text-left">
-          <SheetTitle className="flex items-center gap-2 text-lg font-bold text-slate-950">
-            <BrandMark />
-            {labels.brand}
+          <SheetTitle className="flex items-center text-lg font-bold text-slate-950">
+            <BrandMark className="h-12 w-12" />
+            <span className="sr-only">{labels.brand}</span>
           </SheetTitle>
         </SheetHeader>
 
@@ -298,23 +299,28 @@ function BrandLink({ brand }: { brand: string }) {
   return (
     <Link
       href="/"
-      className="flex min-w-0 items-center gap-2.5 text-slate-950"
+      className="flex min-w-0 items-center text-slate-950"
       aria-label={brand}
     >
-      <BrandMark />
-      <div className="min-w-0">
-        <span className="block truncate text-lg font-bold tracking-normal sm:text-xl">
-          {brand}
-        </span>
-      </div>
+      <BrandMark className="h-12 w-12 lg:h-14 lg:w-14" priority />
     </Link>
   );
 }
 
-function BrandMark() {
+function BrandMark({
+  className = "h-10 w-10",
+  priority = false,
+}: {
+  className?: string;
+  priority?: boolean;
+}) {
   return (
-    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-950 text-white">
-      <Sparkles className="h-4 w-4 text-orange-400" />
+    <span className="flex shrink-0 items-center justify-center">
+      <SiteLogo
+        className={`${className} object-contain`}
+        priority={priority}
+        sizes="(min-width: 1024px) 56px, 48px"
+      />
     </span>
   );
 }

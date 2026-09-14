@@ -2,6 +2,7 @@
 
 import { Link } from "@/i18n/routing";
 import { usePathname } from "@/i18n/routing";
+import SiteLogo from "@/components/SiteLogo";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Package, ShoppingCart, Store } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -32,8 +33,8 @@ export default function AdminSidebar() {
     <div className="flex h-full flex-col space-y-4 border-r border-slate-200 bg-white py-4 text-slate-700">
       <div className="px-3 py-2 flex-1">
         <Link href="/admin" className="flex items-center pl-3 mb-14">
-          <div className="relative mr-4 flex h-8 w-8 items-center justify-center rounded-md bg-slate-950">
-            <Store className="h-5 w-5 text-orange-400" />
+          <div className="relative mr-4 flex h-10 w-10 items-center justify-center">
+            <SiteLogo className="h-10 w-10 object-contain" sizes="40px" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-950">
             {t("adminTitle")}
