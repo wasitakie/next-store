@@ -19,4 +19,6 @@ export interface LocalizedProduct extends Omit<Product, 'name_th' | 'name_en' | 
   name: string;
   description: string;
   category: string;
+  categoryKey?: string;
+  categoryAliases?: string[];
 }

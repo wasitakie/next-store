@@ -1,17 +1,15 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import StoreMotion from "@/components/storefront/StoreMotion";
 import { prisma } from "@/lib/prisma";
 import { getTranslations } from "next-intl/server";
 import { localizeProduct } from "@/lib/utils";
-import ProductCarousel from "@/components/ProductCarousel";
-import { Suspense } from "react";
-import CategoryTitle from "@/components/CategoryTitle";
-import ProductSection from "@/components/ProductSection";
+import ProductCard from "@/components/ProductCard";
+import { HomeHero, HomeSelection } from "@/components/storefront/HomeCollections";
 import JsonLd from "@/components/JsonLd";
 import { absoluteUrl, buildSeoMetadata } from "@/lib/seo";
-import { CreditCard, ShieldCheck, Truck } from "lucide-react";
+import { ArrowUpRight, CreditCard, ShieldCheck, Truck } from "lucide-react";
+import { Link } from "@/i18n/routing";
+import Image from "next/image";
 import type { Metadata } from "next";
-import { ProductGridSkeleton } from "@/components/ui/state";
 
 export async function generateMetadata({
   params,
@@ -33,110 +31,36 @@ export async function generateMetadata({
   });
 }
 
-export default async function Home({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
+export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const t = await getTranslations("HomePage");
-  const rawProducts = await prisma.product.findMany();
-
-  const products = rawProducts.map((p) => localizeProduct(p, locale));
-  const itemListJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    itemListElement: products.slice(0, 12).map((product, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      url: absoluteUrl(`/${locale}/products/${product.slug}`),
-      name: product.name,
-    })),
-  };
-
+  const e = await getTranslations("Storefront");
+  const c = await getTranslations("EcomPages");
+  const products = (await prisma.product.findMany({ orderBy: { createdAt: "desc" } })).map(p => localizeProduct(p, locale));
+  const featured = products.find(p => p.image && p.stock > 0 && p.categoryKey?.toLowerCase() === "electronics") ?? products.find(p => p.image && p.stock > 0) ?? products.find(p => p.image);
+  const categories = [...new Map(products.filter(p => p.category).map(p => [p.categoryKey || p.category, p])).values()].slice(0, 3);
   return (
-    <div className="min-h-screen bg-background">
-      <JsonLd data={itemListJsonLd} />
-      {/* Featured products carousel */}
-
-      <Suspense
-        fallback={
-          <div className="border-b border-slate-200 bg-white px-4 py-12 sm:px-6 lg:px-8">
-            <ProductGridSkeleton count={4} />
-          </div>
-        }
-      >
-        <ProductCarousel product={products} />
-      </Suspense>
-
-      <section className="border-b border-slate-200 bg-white">
-        <div className="container mx-auto grid gap-3 px-4 py-4 sm:grid-cols-3 sm:px-6 lg:px-8">
-          <TrustItem icon={Truck} label={t("freeShipping")} />
-          <TrustItem icon={ShieldCheck} label={t("trustedWarranty")} />
-          <TrustItem icon={CreditCard} label={t("securePayment")} />
+    <StoreMotion>
+      <JsonLd data={{ "@context": "https://schema.org", "@type": "ItemList", itemListElement: products.slice(0, 8).map((p, i) => ({ "@type": "ListItem", position: i + 1, name: p.name, url: absoluteUrl(`/${locale}/products/${p.slug}`) })) }} />
+      <HomeHero products={featured ? [featured, ...products.filter(p => p.id !== featured.id)] : products} />
+      <section className="mx-auto max-w-[1600px] px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
+        <div className="mb-9 flex flex-wrap items-end justify-between gap-5">
+          <h2 className="text-3xl font-normal tracking-tight md:text-5xl">{e("newArrivals")}</h2>
+          <Link href="/products" className="flex items-center gap-2 border-b border-neutral-950 pb-1 text-sm">{t("viewAllProducts")}<ArrowUpRight className="h-4 w-4" /></Link>
         </div>
+        <ProductCard products={products.slice(0, 4)} />
       </section>
-
-      {/* Filterable Products */}
-      <section className="px-4 py-12 sm:px-6 lg:px-8">
-        <div className="container mx-auto mb-8">
-          <h2 className="text-3xl font-bold text-slate-950">
-            {t("featuredProducts")}
-          </h2>
-          <p className="mt-2 max-w-2xl text-slate-500">
-            {t("featuredProductsDesc")}
-          </p>
-        </div>
-        <ProductSection products={products} categories={products} />
-      </section>
-
-      {/* Featured Categories */}
-      <div className="container mx-auto px-4 pb-12 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-end mb-8">
-          <div>
-            <h2 className="text-3xl font-bold text-slate-900">
-              {t("shopFromCategories")}
-            </h2>
-            <p className="text-slate-500 mt-2">{t("premiumForYou")}</p>
-          </div>
-        </div>
-        <div className="mt-5">
-          <CategoryTitle categories={products} locale={locale} />
-        </div>
-      </div>
-
-      {/* Newsletter */}
-      <section className="border-y border-slate-200 bg-white py-16 text-slate-950">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h3 className="text-3xl font-bold mb-4">{t("newsletterTitle")}</h3>
-          <p className="mb-8 text-lg text-slate-500">{t("newsletterDesc")}</p>
-          <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-            <Input
-              type="email"
-              placeholder={t("emailPlaceholder")}
-              className="flex-1 border-slate-200 bg-slate-50 text-slate-900"
-            />
-            <Button className="bg-orange-500 text-white hover:bg-orange-600">
-              {t("subscribe")}
-            </Button>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function TrustItem({
-  icon: Icon,
-  label,
-}: {
-  icon: typeof Truck;
-  label: string;
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
-      <Icon className="h-4 w-4 text-orange-500" />
-      <span>{label}</span>
-    </div>
+      <div className="overflow-hidden border-y border-neutral-200 py-8 text-center text-4xl font-normal uppercase tracking-tight sm:text-6xl lg:text-8xl">{c("statement")}</div>
+      {categories.length > 0 && <section className="mx-auto max-w-[1600px] px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
+        <h2 className="mb-9 text-3xl font-normal tracking-tight md:text-5xl">{t("shopFromCategories")}</h2>
+        <div className="grid gap-5 sm:grid-cols-3">{categories.map(p => <Link key={p.categoryKey || p.category} href={{ pathname: "/products", query: { category: p.categoryKey || p.category } }} className="group relative isolate flex aspect-[4/5] items-end overflow-hidden rounded-xl bg-neutral-800 p-6 text-white">
+          {p.image && <Image src={p.image} alt={p.category} fill sizes="(max-width: 640px) 100vw, 33vw" className="-z-20 object-cover transition-transform duration-500 motion-safe:group-hover:scale-105" />}
+          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/80 to-transparent" />
+          <div className="flex w-full items-center justify-between gap-3"><h3 className="text-2xl">{p.category}</h3><ArrowUpRight className="h-6 w-6 shrink-0" /></div>
+        </Link>)}</div>
+      </section>}
+      <HomeSelection products={products} />
+      <section className="border-t border-neutral-200"><h2 className="px-5 pt-16 text-center text-3xl md:text-5xl">{c("confidence")}</h2><div className="mx-auto grid max-w-[1600px] gap-8 px-5 py-10 sm:grid-cols-3 sm:px-8 lg:px-12">{[{ icon: Truck, label: t("freeShipping") }, { icon: ShieldCheck, label: t("trustedWarranty") }, { icon: CreditCard, label: t("securePayment") }].map(({ icon: Icon, label }) => <div key={label} className="flex items-center gap-4"><Icon className="h-7 w-7 shrink-0 stroke-1" /><p className="text-sm">{label}</p></div>)}</div></section>
+    </StoreMotion>
   );
 }

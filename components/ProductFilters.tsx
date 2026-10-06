@@ -45,7 +45,7 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
   }, [categories]);
 
   const urlMinPrice = Number(searchParams.get("minPrice")) || 0;
-  const urlMaxPrice = Number(searchParams.get("maxPrice")) || maxAvailablePrice;
+  const urlMaxPrice = searchParams.has("maxPrice") ? Number(searchParams.get("maxPrice")) : maxAvailablePrice;
 
   // Local state for the price range input / slider
   const [priceRange, setPriceRange] = useState<[number, number]>([
@@ -67,20 +67,21 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
     if (isStringArray) {
       return (categories as string[]).map((name) => ({
         name,
+        key: name,
+        aliases: [name],
         count: 0,
       }));
     }
 
-    const counts: Record<string, number> = {};
-    (categories as LocalizedProduct[]).forEach((p) => {
-      if (p.category) {
-        counts[p.category] = (counts[p.category] || 0) + 1;
-      }
+    const counts = new Map<string, { name: string; key: string; aliases: string[]; count: number }>();
+    (categories as LocalizedProduct[]).forEach(p => {
+      if (!p.category) return;
+      const key = p.categoryKey || p.category;
+      const entry = counts.get(key) || { name: p.category, key, aliases: p.categoryAliases || [p.category], count: 0 };
+      entry.count++;
+      counts.set(key, entry);
     });
-    return Object.entries(counts).map(([name, count]) => ({
-      name,
-      count,
-    }));
+    return [...counts.values()];
   }, [categories]);
 
   const totalProductCount = useMemo(() => {
@@ -130,7 +131,7 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
   ) => {
     const val = Math.min(Number(e.target.value) || 0, priceRange[1]);
     setPriceRange([val, priceRange[1]]);
-    updateFilters({ minPrice: val > 0 ? String(val) : null });
+
   };
 
   const handleMaxPriceInputChange = (
@@ -138,7 +139,7 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
   ) => {
     const val = Math.max(Number(e.target.value) || 0, priceRange[0]);
     setPriceRange([priceRange[0], val]);
-    updateFilters({ maxPrice: val < maxAvailablePrice ? String(val) : null });
+
   };
 
   const handleStockToggle = () => {
@@ -157,13 +158,13 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
     currentSort !== "newest";
 
   return (
-    <div className="flex flex-col gap-6 rounded-md border border-slate-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
-      <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-neutral-800">
+    <div className="flex flex-col gap-6 bg-white py-2 pr-2 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="flex items-center justify-between pb-4 border-b border-neutral-100 dark:border-neutral-800">
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="h-5 w-5 text-zinc-900 dark:text-zinc-400" />
           <h2
             id="filter-heading"
-            className="text-slate-900 text-lg font-bold dark:text-slate-50"
+            className="text-neutral-900 text-lg font-bold dark:text-neutral-50"
           >
             {t("filter")}
           </h2>
@@ -171,7 +172,7 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
         {hasActiveFilters && (
           <button
             type="button"
-            className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-neutral-800"
+            className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-neutral-500 transition-colors duration-200 hover:bg-neutral-100 hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-neutral-800"
             aria-label={t("clearAll")}
             onClick={handleClearAllFilters}
           >
@@ -182,8 +183,8 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
       </div>
 
       <div className="flex flex-col gap-3">
-        <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-          <ArrowUpDown className="h-4 w-4 text-slate-400" />
+        <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5">
+          <ArrowUpDown className="h-4 w-4 text-neutral-400" />
           {t("sortBy")}
         </h3>
         <div className="flex flex-col gap-1.5">
@@ -200,8 +201,8 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
                 onClick={() => handleSortSelect(option.id)}
                 className={`flex w-full items-center justify-between rounded-md px-3 py-2.5 text-left text-sm transition-colors duration-200 ${
                   isSelected
-                    ? "border border-slate-200 bg-slate-50 font-semibold text-slate-950 dark:border-neutral-800 dark:bg-neutral-800 dark:text-neutral-100"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-neutral-400 dark:hover:text-neutral-200 dark:hover:bg-neutral-800/50"
+                    ? "border border-neutral-200 bg-neutral-50 font-semibold text-neutral-950 dark:border-neutral-800 dark:bg-neutral-800 dark:text-neutral-100"
+                    : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:text-neutral-200 dark:hover:bg-neutral-800/50"
                 }`}
               >
                 <span>{option.label}</span>
@@ -211,11 +212,11 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
         </div>
       </div>
 
-      <hr className="border-slate-100 dark:border-neutral-800" />
+      <hr className="border-neutral-100 dark:border-neutral-800" />
 
       {/* Category Section */}
       <div className="flex flex-col gap-3">
-        <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+        <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
           {t("categories")}
         </h3>
         <div className="flex flex-col gap-1">
@@ -224,8 +225,8 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
             onClick={() => handleCategorySelect("")}
             className={`group flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors duration-200 ${
               !currentCategory
-                ? "border border-slate-200 bg-slate-50 font-semibold text-slate-950 dark:border-neutral-800 dark:bg-neutral-800 dark:text-neutral-100"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-neutral-400 dark:hover:text-neutral-200 dark:hover:bg-neutral-800/50"
+                ? "border border-neutral-200 bg-neutral-50 font-semibold text-neutral-950 dark:border-neutral-800 dark:bg-neutral-800 dark:text-neutral-100"
+                : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:text-neutral-200 dark:hover:bg-neutral-800/50"
             }`}
           >
             <span>{t("allCategories")}</span>
@@ -233,8 +234,8 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
               <span
                 className={`text-xs px-2 py-0.5 rounded-full ${
                   !currentCategory
-                    ? "bg-slate-950 text-white dark:bg-neutral-100 dark:text-neutral-950"
-                    : "bg-slate-100 group-hover:bg-slate-200 dark:bg-neutral-800 dark:group-hover:bg-neutral-700 text-slate-500 dark:text-neutral-400"
+                    ? "bg-neutral-950 text-white dark:bg-neutral-100 dark:text-neutral-950"
+                    : "bg-neutral-100 group-hover:bg-neutral-200 dark:bg-neutral-800 dark:group-hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400"
                 }`}
               >
                 {totalProductCount}
@@ -243,21 +244,21 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
           </button>
 
           {uniqueCategories.map((cat) => {
-            const isSelected = currentCategory === cat.name;
+            const isSelected = [cat.key, ...cat.aliases].includes(currentCategory);
             return (
               <button
                 key={cat.name}
                 type="button"
-                onClick={() => handleCategorySelect(cat.name)}
+                onClick={() => handleCategorySelect(cat.key)}
                 className={`group flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors duration-200 ${
                   isSelected
-                    ? "border border-slate-200 bg-slate-50 font-semibold text-slate-950 dark:border-neutral-800 dark:bg-neutral-800 dark:text-neutral-100"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-neutral-400 dark:hover:text-neutral-200 dark:hover:bg-neutral-800/50"
+                    ? "border border-neutral-200 bg-neutral-50 font-semibold text-neutral-950 dark:border-neutral-800 dark:bg-neutral-800 dark:text-neutral-100"
+                    : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:text-neutral-200 dark:hover:bg-neutral-800/50"
                 }`}
               >
                 <span className="truncate flex items-center gap-1">
                   <ChevronRight
-                    className={`h-3 w-3 transition-transform ${isSelected ? "translate-x-0.5 text-orange-500" : "opacity-0 group-hover:opacity-100 text-slate-400"}`}
+                    className={`h-3 w-3 transition-transform ${isSelected ? "tranneutral-x-0.5 text-neutral-500" : "opacity-0 group-hover:opacity-100 text-neutral-400"}`}
                   />
                   {cat.name}
                 </span>
@@ -266,7 +267,7 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
                     className={`text-xs px-2 py-0.5 rounded-full ${
                       isSelected
                         ? "bg-zinc-100 dark:bg-zinc-900/60"
-                        : "bg-slate-100 group-hover:bg-slate-200 dark:bg-neutral-800 dark:group-hover:bg-neutral-700 text-slate-500 dark:text-neutral-400"
+                        : "bg-neutral-100 group-hover:bg-neutral-200 dark:bg-neutral-800 dark:group-hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400"
                     }`}
                   >
                     {cat.count}
@@ -278,11 +279,11 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
         </div>
       </div>
 
-      <hr className="border-slate-100 dark:border-neutral-800" />
+      <hr className="border-neutral-100 dark:border-neutral-800" />
 
       {/* Price Range Section */}
       <div className="flex flex-col gap-4">
-        <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+        <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
           {t("priceRange")}
         </h3>
 
@@ -300,42 +301,46 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
 
         <div className="grid grid-cols-2 gap-3 items-center">
           <div className="relative">
-            <span className="absolute left-3 top-2.5 text-xs font-semibold text-slate-400 dark:text-neutral-500">
+            <span className="absolute left-3 top-2.5 text-xs font-semibold text-neutral-400 dark:text-neutral-500">
               Min
             </span>
             <Input
               type="number"
+              aria-label={t("minPrice")}
               value={priceRange[0]}
               min={0}
               max={priceRange[1]}
               onChange={handleMinPriceInputChange}
-              className="h-10 rounded-md border-slate-200 bg-slate-50/50 pl-10 text-sm font-medium dark:border-neutral-800 dark:bg-neutral-800/40"
+              onBlur={() => handlePriceCommit(priceRange)}
+              className="h-10 rounded-md border-neutral-200 bg-neutral-50/50 pl-10 text-sm font-medium dark:border-neutral-800 dark:bg-neutral-800/40"
             />
           </div>
           <div className="relative">
-            <span className="absolute left-3 top-2.5 text-xs font-semibold text-slate-400 dark:text-neutral-500">
+            <span className="absolute left-3 top-2.5 text-xs font-semibold text-neutral-400 dark:text-neutral-500">
               Max
             </span>
             <Input
               type="number"
+              aria-label={t("maxPrice")}
               value={priceRange[1]}
               min={priceRange[0]}
               max={maxAvailablePrice}
               onChange={handleMaxPriceInputChange}
-              className="h-10 rounded-md border-slate-200 bg-slate-50/50 pl-10 text-sm font-medium dark:border-neutral-800 dark:bg-neutral-800/40"
+              onBlur={() => handlePriceCommit(priceRange)}
+              className="h-10 rounded-md border-neutral-200 bg-neutral-50/50 pl-10 text-sm font-medium dark:border-neutral-800 dark:bg-neutral-800/40"
             />
           </div>
         </div>
       </div>
 
-      <hr className="border-slate-100 dark:border-neutral-800" />
+      <hr className="border-neutral-100 dark:border-neutral-800" />
 
       <div className="flex items-center justify-between py-1">
         <div className="flex flex-col gap-0.5">
-          <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+          <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
             {t("availability")}
           </h3>
-          <p className="text-xs text-slate-400 dark:text-neutral-500">
+          <p className="text-xs text-neutral-400 dark:text-neutral-500">
             {t("inStockOnly")}
           </p>
         </div>
@@ -344,13 +349,15 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
           type="button"
           onClick={handleStockToggle}
           aria-label={t("inStockOnly")}
+          role="switch"
+          aria-checked={currentStock}
           className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-            currentStock ? "bg-orange-500" : "bg-slate-200 dark:bg-neutral-800"
+            currentStock ? "bg-neutral-950" : "bg-neutral-200 dark:bg-neutral-800"
           }`}
         >
           <span
             className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-              currentStock ? "translate-x-5" : "translate-x-0"
+              currentStock ? "tranneutral-x-5" : "tranneutral-x-0"
             }`}
           />
         </button>

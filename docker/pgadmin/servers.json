@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Next Store Local",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "nextstore",
+      "Username": "nextstore",
+      "SSLMode": "prefer"
+    }
+  }
+}

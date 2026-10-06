@@ -6,6 +6,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -21,12 +22,15 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useFormatter, useTranslations } from "next-intl";
-import { CartDrawerSkeleton, EmptyState } from "@/components/ui/state";
+import type { LocalizedProduct } from "@/types/product";
+import CartPopularItems from "@/components/storefront/CartPopularItems";
+import { CartDrawerSkeleton } from "@/components/ui/state";
 
-export default function ShopingCart() {
+export default function ShopingCart({ popularProducts }: { popularProducts: LocalizedProduct[] }) {
   const [mounted, setMounted] = useState(false);
   const format = useFormatter();
   const t = useTranslations("CartPage");
+  const syncError = useCartStore(state => state.error);
 
   const {
     items,
@@ -51,10 +55,11 @@ export default function ShopingCart() {
     return (
       <Button
         variant="ghost"
-        size="sm"
-        className="relative rounded-md text-slate-700 transition-colors hover:bg-slate-100 hover:text-orange-600"
+        aria-label={t("title")}
+        size="icon"
+        className="relative size-9 shrink-0 rounded-full p-0 text-inherit hover:bg-transparent hover:text-inherit hover:opacity-70 [&_svg]:size-[24px]"
       >
-        <ShoppingBag className="w-5 h-5" />
+        <CartIcon strokeWidth={1.25} />
       </Button>
     );
   }
@@ -64,53 +69,50 @@ export default function ShopingCart() {
       <SheetTrigger asChild>
         <Button
           variant="ghost"
-          size="sm"
-          className="relative cursor-pointer rounded-md text-slate-700 transition-colors hover:bg-slate-100 hover:text-orange-600"
+          aria-label={t("title")}
+          size="icon"
+          className="relative size-9 shrink-0 cursor-pointer rounded-full p-0 text-inherit hover:bg-transparent hover:text-inherit hover:opacity-70 [&_svg]:size-[24px]"
         >
-          <ShoppingBag className="w-5 h-5" />
-          {totalItems > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white ring-2 ring-white">
-              {totalItems}
+          <CartIcon strokeWidth={1.25} />
+          {(
+            <span className="absolute right-0 top-0 flex size-3.5 items-center justify-center rounded-full bg-white text-[9px] leading-none text-neutral-950">
+              {totalItems > 9 ? "9+" : totalItems}
             </span>
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent className="flex w-full flex-col border-l border-slate-200 bg-white pl-0 pr-0 sm:max-w-md">
-        <SheetHeader className="border-b border-slate-100 px-6 pb-4">
-          <SheetTitle className="flex items-center gap-2 text-xl font-bold text-slate-950">
-            <CartIcon className="h-5 w-5 text-orange-500" />
+      <SheetContent overlayClassName="bg-black/40" className="flex h-dvh w-full flex-col gap-0 border-l border-neutral-200 bg-white px-0 pb-0 pt-5 text-neutral-950 sm:max-w-[400px]">
+        <SheetHeader className="border-b border-neutral-100 px-6 pb-4">
+          <SheetTitle className="flex items-center gap-2 text-base font-normal text-neutral-950">
+            <CartIcon className="h-5 w-5 text-neutral-500" />
             {t("title")}
           </SheetTitle>
+          <SheetDescription className="sr-only">{t("orderSummary")}</SheetDescription>
         </SheetHeader>
 
+        {syncError && <p role="alert" className="mx-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{t("syncError")}</p>}
         {isLoading ? (
           <CartDrawerSkeleton />
         ) : items.length === 0 ? (
-          <EmptyState
-            icon={ShoppingBag}
-            title={t("emptyCart")}
-            description={t("emptyCartDescLong")}
-            className="m-6 flex-1 border-0 bg-slate-50"
-            action={
-              <Button
-                className="cursor-pointer bg-orange-500 text-white hover:bg-orange-600"
-                onClick={() => setIsOpen(false)}
-              >
-                {t("continueShopping")}
-              </Button>
-            }
-          />
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6">
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <CartIcon className="mb-4 size-12 stroke-[1.25]" />
+              <p className="max-w-48 text-xl leading-snug">{t("emptyCart")}</p>
+            </div>
+            <CartPopularItems products={popularProducts} />
+            <Button asChild variant="outline" className="mt-6 h-11 w-full rounded-full" onClick={() => setIsOpen(false)}><Link href="/products">{t("continueShopping")}</Link></Button>
+          </div>
         ) : (
           <>
             {/* Scrollable list of items */}
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-4">
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-4 rounded-md border border-slate-200 bg-white p-3 transition-colors hover:border-slate-300"
+                  className="flex gap-4 rounded-md border border-neutral-200 bg-white p-3 transition-colors hover:border-neutral-300"
                 >
                   {/* Image */}
-                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-slate-50">
+                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md border border-neutral-200 bg-neutral-50">
                     {item.image ? (
                       <Image
                         src={item.image}
@@ -132,17 +134,18 @@ export default function ShopingCart() {
                       <h4 className="text-sm font-semibold text-gray-900 line-clamp-2 leading-tight">
                         {item.name}
                       </h4>
-                      <p className="mt-1 text-sm font-bold text-slate-950">
+                      <p className="mt-1 text-sm font-bold text-neutral-950">
                         {format.number(item.price, "currency")}
                       </p>
                     </div>
 
                     {/* Quantity & Actions */}
                     <div className="flex items-center justify-between mt-2">
-                      <div className="flex items-center rounded-md border border-slate-200 bg-white">
+                      <div className="flex items-center rounded-md border border-neutral-200 bg-white">
                         <button
                           type="button"
-                          className="cursor-pointer p-1 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-950"
+                          className="cursor-pointer p-1 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950"
+                          aria-label={t("decreaseQuantity")}
                           onClick={() =>
                             updateQuantity(item.id, item.quantity - 1)
                           }
@@ -154,7 +157,8 @@ export default function ShopingCart() {
                         </span>
                         <button
                           type="button"
-                          className="cursor-pointer p-1 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-950 disabled:cursor-not-allowed"
+                          className="cursor-pointer p-1 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950 disabled:cursor-not-allowed"
+                          aria-label={t("increaseQuantity")}
                           disabled={item.quantity >= item.stock}
                           onClick={() =>
                             updateQuantity(item.id, item.quantity + 1)
@@ -167,6 +171,7 @@ export default function ShopingCart() {
                       <button
                         type="button"
                         className="text-zinc-400 hover:text-red-500 p-1 transition-colors cursor-pointer"
+                        aria-label={t("deleteItem")}
                         onClick={() => removeItem(item.id)}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -175,10 +180,11 @@ export default function ShopingCart() {
                   </div>
                 </div>
               ))}
+              <CartPopularItems products={popularProducts} />
             </div>
 
             {/* Sticky summary & actions footer */}
-            <div className="space-y-4 border-t border-slate-100 bg-slate-50/60 px-6 py-6">
+            <div className="shrink-0 space-y-3 border-t border-neutral-100 bg-white px-4 py-4">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-sm text-gray-500">
                   <span>{t("totalPriceCount", { count: totalItems })}</span>
@@ -192,7 +198,7 @@ export default function ShopingCart() {
                 </div>
                 <div className="flex items-center justify-between border-t border-zinc-200/60 pt-3 text-base font-bold text-gray-900">
                   <span>{t("netTotal")}</span>
-                  <span className="text-lg text-orange-600">
+                  <span className="text-lg text-neutral-600">
                     {format.number(total, "currency")}
                   </span>
                 </div>
@@ -201,14 +207,14 @@ export default function ShopingCart() {
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <Button
                   variant="outline"
-                  className="w-full cursor-pointer border-slate-200 hover:bg-slate-100"
+                  className="w-full cursor-pointer border-neutral-200 hover:bg-neutral-100"
                   asChild
                   onClick={() => setIsOpen(false)}
                 >
                   <Link href="/cart">{t("viewCart")}</Link>
                 </Button>
                 <Button
-                  className="w-full cursor-pointer bg-orange-500 text-white hover:bg-orange-600"
+                  className="w-full cursor-pointer bg-neutral-950 text-white hover:bg-neutral-800"
                   asChild
                   onClick={() => setIsOpen(false)}
                 >

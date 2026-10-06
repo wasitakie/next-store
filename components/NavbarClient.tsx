@@ -1,7 +1,9 @@
 "use client";
 
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/routing";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -22,28 +25,22 @@ import { SignOutButton } from "@/components/Button";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ShopingCart from "@/components/ShopingCart";
 import SearchDialog from "@/components/Search";
-import SiteLogo from "@/components/SiteLogo";
 import { cn } from "@/lib/utils";
 import {
-  Home,
+  Asterisk,
+  ChevronDown,
+  ChevronRight,
   Heart,
-  Info,
-  Mail,
   Menu,
-  Package,
   Search,
   ShieldCheck,
-  Sparkles,
   UserRound,
+  X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
 import { useWishlistStore } from "@/lib/store/useWishlistStore";
+import { LocalizedProduct } from "@/types/product";
 
-type NavLink = {
-  label: string;
-  href: string;
-};
-
+type NavLink = { label: string; href: string };
 type NavbarLabels = {
   brand: string;
   manageProducts: string;
@@ -64,82 +61,119 @@ type NavbarLabels = {
   searchClose: string;
   searchSuggestions: string[];
 };
-
 export type NavbarUser = {
   name: string | null;
   email: string | null;
   image: string | null;
   role: "user" | "admin";
 };
-
+type NavCategory = { key: string; name: string; image: string | null };
 type NavbarClientProps = {
   user: NavbarUser | null;
   links: NavLink[];
   labels: NavbarLabels;
+  categories: NavCategory[];
+  popularProducts: LocalizedProduct[];
 };
+const iconButtonClass =
+  "size-9 shrink-0 rounded-full p-0 text-inherit hover:bg-transparent hover:text-inherit hover:opacity-70 [&_svg]:size-[22px]";
 
 export default function NavbarClient({
   user,
   links,
   labels,
+  categories,
+  popularProducts,
 }: NavbarClientProps) {
   const pathname = usePathname();
+  const t = useTranslations("Navigation");
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const isAdmin = user?.role === "admin";
-  const allLinks = isAdmin
-    ? [...links, { label: labels.manageProducts, href: "/admin/products" }]
-    : links;
+  const overHero = pathname === "/" || pathname === "/products";
+  // The logo links home; keep the main navigation as a compact shop menu.
+  const allLinks = links
+    .filter((link) => link.href !== "/")
+    .map((link) =>
+      link.href === "/products" ? { ...link, label: t("shop") } : link,
+    );
+  if (user?.role === "admin")
+    allLinks.push({ label: labels.manageProducts, href: "/admin/products" });
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl supports-[backdrop-filter]:bg-white/80">
-      <nav className="container mx-auto flex h-16 items-center gap-6 px-4 sm:px-6 lg:h-[4.5rem] lg:px-8">
-        <div className="flex min-w-0 flex-1 items-center gap-2 lg:flex-none">
-          <MobileMenu
-            isOpen={isOpen}
-            setIsOpen={setIsOpen}
-            setIsSearchOpen={setIsSearchOpen}
-            links={allLinks}
-            labels={labels}
-            pathname={pathname}
-            user={user}
-          />
-          <BrandLink brand={labels.brand} />
-        </div>
-
-        <div className="hidden min-w-0 flex-1 justify-center lg:flex">
-          <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 p-1">
-            {allLinks.map((link) => (
-              <DesktopNavLink
+    <header
+      className={cn(
+        "z-40 w-full",
+        overHero
+          ? "absolute left-0 bg-gradient-to-b from-black/25 to-transparent text-white"
+          : "relative bg-white text-neutral-950",
+      )}
+    >
+      <AnnouncementBar />
+      <nav
+        aria-label={t("mainNavigation")}
+        className="mx-auto flex h-[88px] max-w-[1600px] items-center justify-between gap-2 px-5 md:h-[100px] md:px-8 lg:gap-6 xl:gap-10 xl:px-12"
+      >
+        <BrandLink brand={labels.brand} />
+        <div className="hidden flex-1 items-center gap-6 lg:flex xl:gap-9 xl:pl-16">
+          {allLinks.map((link) =>
+            link.href === "/products" ? (
+              <ShopMenu
                 key={link.href}
-                link={link}
-                active={isActivePath(pathname, link.href)}
+                label={link.label}
+                categories={categories}
               />
-            ))}
-          </div>
+            ) : (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={pathname === link.href ? "page" : undefined}
+                className="whitespace-nowrap text-base font-normal uppercase transition-opacity hover:opacity-60"
+              >
+                {link.label}
+              </Link>
+            ),
+          )}
         </div>
-
-        <div className="flex flex-1 items-center justify-end gap-1.5 sm:gap-2 lg:flex-none">
-          <div className="hidden md:block">
-            <LanguageSwitcher />
-          </div>
+        <div className="flex shrink-0 items-center gap-0 min-[360px]:gap-1 lg:gap-2">
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="hidden h-10 w-10 rounded-md text-slate-700 hover:bg-slate-100 md:inline-flex"
+            className={iconButtonClass}
             aria-label={labels.search}
             onClick={() => setIsSearchOpen(true)}
           >
-            <Search className="h-5 w-5" />
+            <Search strokeWidth={1.25} />
           </Button>
-          <NavbarWishlistLink label={labels.wishlist} />
-          <ShopingCart />
           {user ? (
             <UserMenu user={user} labels={labels} />
           ) : (
-            <AuthActions labels={labels} />
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className={iconButtonClass}
+            >
+              <Link href="/login" aria-label={labels.login}>
+                <UserRound strokeWidth={1.25} />
+              </Link>
+            </Button>
           )}
+          <div className="hidden lg:block">
+            <NavbarWishlistLink label={labels.wishlist} />
+          </div>
+          <ShopingCart popularProducts={[]} />
+          <div className="ml-1 hidden lg:block">
+            <LanguageSwitcher compact />
+          </div>
+          <MobileMenu
+            isOpen={isOpen}
+            setIsOpen={setIsOpen}
+            links={allLinks}
+            labels={labels}
+            categories={categories}
+            showRegister={!user}
+          />
         </div>
       </nav>
       <SearchDialog
@@ -156,142 +190,41 @@ export default function NavbarClient({
           suggestions: labels.searchSuggestions,
         }}
       />
-
-      <div className="hidden border-t border-slate-100 bg-white/70 px-3 py-2 backdrop-blur md:block lg:hidden">
-        <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto">
-          {allLinks.map((link) => (
-            <TabletNavLink
-              key={link.href}
-              link={link}
-              active={isActivePath(pathname, link.href)}
-            />
-          ))}
-        </div>
-      </div>
     </header>
   );
 }
 
-function MobileMenu({
-  isOpen,
-  setIsOpen,
-  setIsSearchOpen,
-  links,
-  labels,
-  pathname,
-  user,
-}: {
-  isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
-  setIsSearchOpen: (open: boolean) => void;
-  links: NavLink[];
-  labels: NavbarLabels;
-  pathname: string;
-  user: NavbarUser | null;
-}) {
+function AnnouncementBar() {
+  const t = useTranslations("Storefront");
+  const home = useTranslations("HomePage");
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10 shrink-0 rounded-md text-slate-700 hover:bg-slate-100 md:hidden"
-          aria-label="Open navigation"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent
-        side="left"
-        className="flex w-[88vw] max-w-sm flex-col border-r border-slate-200 bg-white p-0"
+    <div className="h-8 overflow-hidden bg-[#1a1a1a] text-white">
+      <p className="sr-only">
+        {t("announcement")} · {home("freeShipping")}
+      </p>
+      <div
+        aria-hidden="true"
+        className="store-announcement flex w-max min-w-full items-center"
       >
-        <SheetHeader className="border-b border-slate-100 px-5 py-4 text-left">
-          <SheetTitle className="flex items-center text-lg font-bold text-slate-950">
-            <BrandMark className="h-12 w-12" />
-            <span className="sr-only">{labels.brand}</span>
-          </SheetTitle>
-        </SheetHeader>
-
-        <div className="flex flex-1 flex-col gap-5 px-5 py-5">
-          {user && (
-            <div className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-3">
-              <UserAvatar user={user} />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-950">
-                  {user.name ?? labels.profile}
-                </p>
-                {user.email && (
-                  <p className="truncate text-xs text-slate-500">
-                    {user.email}
-                  </p>
-                )}
+        {[0, 1].map((copy) => (
+          <div key={copy} className="flex h-8 shrink-0 items-center">
+            {[0, 1, 2].map((index) => (
+              <div
+                key={index}
+                className="flex items-center text-[11px] font-normal uppercase sm:text-xs"
+              >
+                <span className="w-[190px] text-center sm:w-[240px]">
+                  {t("announcement")}
+                </span>
+                <span className="w-[190px] text-center sm:w-[240px]">
+                  {home("freeShipping")}
+                </span>
               </div>
-            </div>
-          )}
-
-          <div className="grid gap-1.5">
-            {links.map((link) => (
-              <MobileNavLink
-                key={link.href}
-                link={link}
-                active={isActivePath(pathname, link.href)}
-                onClick={() => setIsOpen(false)}
-              />
             ))}
           </div>
-
-          <div className="grid gap-3 border-t border-slate-100 pt-5">
-            <div className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-2">
-              <span className="text-sm font-medium text-slate-600">
-                {labels.language}
-              </span>
-              <LanguageSwitcher />
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              className="justify-start border-slate-200 bg-white text-slate-700"
-              onClick={() => {
-                setIsOpen(false);
-                setTimeout(() => setIsSearchOpen(true), 150);
-              }}
-            >
-              <Search className="h-4 w-4" />
-              {labels.search}
-            </Button>
-
-            <Button
-              variant="outline"
-              asChild
-              className="justify-start border-slate-200 bg-white text-slate-700"
-            >
-              <Link href="/wishlist" onClick={() => setIsOpen(false)}>
-                <Heart className="h-4 w-4" />
-                {labels.wishlist}
-              </Link>
-            </Button>
-          </div>
-
-          {!user && (
-            <div className="mt-auto grid gap-2 border-t border-slate-100 pt-5">
-              <Button variant="outline" asChild>
-                <Link href="/login" onClick={() => setIsOpen(false)}>
-                  {labels.login}
-                </Link>
-              </Button>
-              <Button
-                asChild
-                className="bg-orange-500 text-white hover:bg-orange-600"
-              >
-                <Link href="/register" onClick={() => setIsOpen(false)}>
-                  {labels.register}
-                </Link>
-              </Button>
-            </div>
-          )}
-        </div>
-      </SheetContent>
-    </Sheet>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -299,138 +232,272 @@ function BrandLink({ brand }: { brand: string }) {
   return (
     <Link
       href="/"
-      className="flex min-w-0 items-center text-slate-950"
       aria-label={brand}
+      className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xl font-medium leading-none tracking-tighter min-[360px]:text-[26px] md:text-[30px]"
     >
-      <BrandMark className="h-12 w-12 lg:h-14 lg:w-14" priority />
+      NextStore{" "}
+      <Asterisk
+        aria-hidden="true"
+        className="size-6 md:size-8"
+        strokeWidth={3}
+      />
     </Link>
   );
 }
 
-function BrandMark({
-  className = "h-10 w-10",
-  priority = false,
+function ShopMenu({
+  label,
+  categories,
 }: {
-  className?: string;
-  priority?: boolean;
+  label: string;
+  categories: NavCategory[];
 }) {
+  const t = useTranslations("Navigation");
+  const [open, setOpen] = useState(false);
   return (
-    <span className="flex shrink-0 items-center justify-center">
-      <SiteLogo
-        className={`${className} object-contain`}
-        priority={priority}
-        sizes="(min-width: 1024px) 56px, 48px"
-      />
-    </span>
+    <div
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={(event) => {
+        if (!event.currentTarget.contains(document.activeElement))
+          setOpen(false);
+      }}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") setOpen(false);
+      }}
+    >
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls="shop-navigation"
+        onClick={() => setOpen(true)}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowDown") {
+            event.preventDefault();
+            setOpen(true);
+          }
+        }}
+        className="inline-flex h-10 items-center gap-2 text-base font-normal uppercase underline-offset-8 outline-offset-4 hover:underline"
+      >
+        {label}
+        <ChevronDown
+          className={cn("size-4 transition-transform", open && "rotate-180")}
+          strokeWidth={1}
+        />
+      </button>
+      {open && (
+        <div
+          id="shop-navigation"
+          className="absolute -left-7 top-full z-50 w-[min(1040px,calc(100vw-20rem))] pt-5"
+        >
+          <div className="grid grid-cols-[180px_1fr] gap-8 rounded-xl border border-neutral-100 bg-white p-8 text-neutral-950 shadow-sm xl:grid-cols-[240px_1fr]">
+            <div>
+              <p className="mb-4 text-xs uppercase text-neutral-500">
+                {t("categories")}
+              </p>
+              <div className="flex flex-col items-start gap-4">
+                <Link
+                  href="/products"
+                  onClick={() => setOpen(false)}
+                  className="text-sm hover:underline"
+                >
+                  {t("allProducts")}
+                </Link>
+                {categories.slice(0, 6).map((category) => (
+                  <Link
+                    key={category.key}
+                    href={{
+                      pathname: "/products",
+                      query: { category: category.key },
+                    }}
+                    onClick={() => setOpen(false)}
+                    className="text-sm hover:underline"
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="mb-4 text-xs uppercase text-neutral-500">
+                {t("shopCollections")}
+              </p>
+              <div className="grid grid-cols-4 gap-4">
+                {categories
+                  .filter((category) => category.image)
+                  .slice(0, 4)
+                  .map((category) => (
+                    <Link
+                      key={category.key}
+                      href={{
+                        pathname: "/products",
+                        query: { category: category.key },
+                      }}
+                      onClick={() => setOpen(false)}
+                      className="group min-w-0 text-center text-sm"
+                    >
+                      <div className="relative mb-3 aspect-[4/5] overflow-hidden rounded-lg bg-neutral-100">
+                        <Image
+                          src={category.image!}
+                          alt={category.name}
+                          fill
+                          sizes="180px"
+                          className="object-cover transition-transform group-hover:scale-105"
+                        />
+                      </div>
+                      {category.name}
+                    </Link>
+                  ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileMenu({
+  isOpen,
+  setIsOpen,
+  links,
+  labels,
+  categories,
+  showRegister,
+}: {
+  isOpen: boolean;
+  setIsOpen: (value: boolean) => void;
+  links: NavLink[];
+  labels: NavbarLabels;
+  categories: NavCategory[];
+  showRegister: boolean;
+}) {
+  const t = useTranslations("Navigation");
+  const mobileLinks = [
+    ...links.filter((link) => link.href !== "/contact"),
+    { label: labels.wishlist, href: "/wishlist" },
+    ...links.filter((link) => link.href === "/contact"),
+  ];
+  return (
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(iconButtonClass, "lg:hidden [&_svg]:size-7")}
+          aria-label={t("openMenu")}
+        >
+          <Menu strokeWidth={1.25} />
+        </Button>
+      </SheetTrigger>
+      <SheetContent
+        side="right"
+        overlayClassName="top-8"
+        aria-describedby={undefined}
+        className="top-8 flex h-[calc(100dvh-2rem)] w-full max-w-none flex-col gap-0 overflow-y-auto border-0 bg-white p-0 text-neutral-950 sm:max-w-none [&>button:last-child]:hidden"
+      >
+        <SheetHeader className="flex h-[88px] shrink-0 flex-row items-center justify-between space-y-0 px-5 md:h-[100px] md:px-8">
+          <SheetTitle className="text-neutral-950">
+            <span onClick={() => setIsOpen(false)}>
+              <BrandLink brand={labels.brand} />
+            </span>
+          </SheetTitle>
+          <SheetClose asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={iconButtonClass}
+              aria-label={t("closeMenu")}
+            >
+              <X strokeWidth={1.25} />
+            </Button>
+          </SheetClose>
+        </SheetHeader>
+        <nav aria-label={t("mainNavigation")} className="px-5 py-2 md:px-8">
+          {mobileLinks.map((link) =>
+            link.href === "/products" ? (
+              <details
+                key={link.href}
+                className="group border-b border-neutral-200"
+              >
+                <summary className="flex min-h-[68px] cursor-pointer list-none items-center justify-between py-4 text-2xl">
+                  {link.label}
+                  <ChevronRight
+                    className="size-6 text-neutral-500 transition-transform group-open:rotate-90"
+                    strokeWidth={1}
+                  />
+                </summary>
+                <div className="flex flex-col gap-5 pb-6 pl-3 text-base">
+                  <Link href="/products" onClick={() => setIsOpen(false)}>
+                    {t("allProducts")}
+                  </Link>
+                  {categories.map((category) => (
+                    <Link
+                      key={category.key}
+                      href={{
+                        pathname: "/products",
+                        query: { category: category.key },
+                      }}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {category.name}
+                    </Link>
+                  ))}
+                </div>
+              </details>
+            ) : (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setIsOpen(false)}
+                className="flex min-h-[68px] items-center justify-between border-b border-neutral-200 py-4 text-2xl font-normal hover:text-neutral-500"
+              >
+                {link.label}
+              </Link>
+            ),
+          )}
+        </nav>
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-4 border-t border-neutral-200 px-5 py-5 text-sm md:px-8">
+          <span className="text-neutral-500">{labels.language}</span>
+          <LanguageSwitcher />
+          {showRegister && (
+            <Link
+              href="/register"
+              onClick={() => setIsOpen(false)}
+              className="w-full text-neutral-500 underline underline-offset-4"
+            >
+              {labels.register}
+            </Link>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 
 function NavbarWishlistLink({ label }: { label: string }) {
   const [mounted, setMounted] = useState(false);
   const count = useWishlistStore((state) => state.items.length);
-
   useEffect(() => {
     setMounted(true);
   }, []);
-
   return (
     <Button
       variant="ghost"
       size="icon"
       asChild
-      className="relative h-10 w-10 rounded-md text-slate-700 hover:bg-orange-50 hover:text-orange-600"
+      className={cn(iconButtonClass, "relative")}
     >
       <Link href="/wishlist" aria-label={label}>
-        <Heart className="h-5 w-5" />
-        {mounted && count > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
-            {count > 9 ? "9+" : count}
-          </span>
-        )}
+        <Heart strokeWidth={1.25} />
+        <span className="absolute right-0 top-0 flex size-3.5 items-center justify-center rounded-full bg-white text-[9px] leading-none text-neutral-950">
+          {mounted ? (count > 9 ? "9+" : count) : 0}
+        </span>
       </Link>
     </Button>
-  );
-}
-
-function DesktopNavLink({ link, active }: { link: NavLink; active: boolean }) {
-  const Icon = getNavIcon(link.href);
-
-  return (
-    <Link
-      href={link.href}
-      className={cn(
-        "inline-flex h-10 items-center gap-2 rounded-md px-4 text-sm font-medium text-slate-600 transition-colors hover:bg-white hover:text-slate-950",
-        active && "bg-white text-slate-950 shadow-xs",
-      )}
-    >
-      <Icon className="h-4 w-4" />
-      {link.label}
-    </Link>
-  );
-}
-
-function TabletNavLink({ link, active }: { link: NavLink; active: boolean }) {
-  const Icon = getNavIcon(link.href);
-
-  return (
-    <Link
-      href={link.href}
-      className={cn(
-        "inline-flex h-9 shrink-0 items-center gap-2 rounded-md px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950",
-        active && "bg-slate-950 text-white hover:bg-slate-900 hover:text-white",
-      )}
-    >
-      <Icon className="h-4 w-4" />
-      {link.label}
-    </Link>
-  );
-}
-
-function MobileNavLink({
-  link,
-  active,
-  onClick,
-}: {
-  link: NavLink;
-  active: boolean;
-  onClick: () => void;
-}) {
-  const Icon = getNavIcon(link.href);
-
-  return (
-    <Link
-      href={link.href}
-      onClick={onClick}
-      className={cn(
-        "flex h-12 items-center gap-3 rounded-md px-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-950",
-        active && "bg-slate-950 text-white hover:bg-slate-900 hover:text-white",
-      )}
-    >
-      <Icon className="h-4 w-4" />
-      {link.label}
-    </Link>
-  );
-}
-
-function AuthActions({ labels }: { labels: NavbarLabels }) {
-  return (
-    <div className="hidden items-center gap-2 md:flex">
-      <Button
-        variant="outline"
-        size="sm"
-        asChild
-        className="border-slate-200 bg-white"
-      >
-        <Link href="/login">{labels.login}</Link>
-      </Button>
-      <Button
-        size="sm"
-        asChild
-        className="bg-orange-500 text-white hover:bg-orange-600"
-      >
-        <Link href="/register">{labels.register}</Link>
-      </Button>
-    </div>
   );
 }
 
@@ -447,22 +514,24 @@ function UserMenu({
         <Button
           variant="ghost"
           size="icon"
-        className="h-10 w-10 rounded-md border border-slate-200 bg-white p-0 hover:bg-slate-50"
-          aria-label="Open account menu"
+          className={iconButtonClass}
+          aria-label={labels.profile}
         >
-          <UserAvatar user={user} />
+          <UserRound className="size-[22px]" strokeWidth={1.25} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         <div className="px-2 py-2">
-          <div className="flex items-center gap-2 rounded-md bg-slate-50 p-2">
-            <UserRound className="h-4 w-4 text-slate-500" />
+          <div className="flex items-center gap-2 rounded-md bg-neutral-50 p-2">
+            <UserRound className="h-4 w-4 text-neutral-500" />
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-slate-900">
+              <p className="truncate text-sm font-semibold text-neutral-900">
                 {user.name ?? labels.profile}
               </p>
               {user.email && (
-                <p className="truncate text-xs text-slate-500">{user.email}</p>
+                <p className="truncate text-xs text-neutral-500">
+                  {user.email}
+                </p>
               )}
             </div>
           </div>
@@ -487,34 +556,4 @@ function UserMenu({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
-
-function UserAvatar({ user }: { user: NavbarUser }) {
-  const fallback = user.name?.charAt(0) || user.email?.charAt(0) || "U";
-
-  return (
-    <Avatar className="h-8 w-8">
-      <AvatarImage src={user.image ?? ""} alt={user.name ?? ""} />
-      <AvatarFallback className="bg-slate-100 text-sm font-semibold text-slate-700">
-        {fallback.toUpperCase()}
-      </AvatarFallback>
-    </Avatar>
-  );
-}
-
-function getNavIcon(href: string) {
-  if (href === "/") return Home;
-  if (href.startsWith("/products")) return Package;
-  if (href.startsWith("/about")) return Info;
-  if (href.startsWith("/contact")) return Mail;
-  if (href.startsWith("/admin")) return ShieldCheck;
-  return Sparkles;
-}
-
-function isActivePath(pathname: string, href: string) {
-  if (href === "/") {
-    return pathname === "/";
-  }
-
-  return pathname === href || pathname.startsWith(`${href}/`);
 }

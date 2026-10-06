@@ -1,45 +1,8 @@
-import { PrismaClient } from "@prisma/client";
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
-import * as dotenv from "dotenv";
-import { boolean } from "zod";
-
-dotenv.config();
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-function createAdapter() {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL is not defined");
-  }
-
-  const url = new URL(databaseUrl);
-
-  return new PrismaMariaDb({
-    host: url.hostname,
-    port: url.port ? Number(url.port) : 3306,
-    user: decodeURIComponent(url.username),
-    password: decodeURIComponent(url.password),
-    database: url.pathname.replace(/^\//, ""),
-    connectionLimit: 5,
-    acquireTimeout: 20_000,
-    connectTimeout: 10_000,
-    ssl: true,
-  });
-}
-
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    adapter: createAdapter(),
-  });
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+import { prisma } from "../lib/prisma";
 
 async function main() {
-  console.log("ล้างข้อมูลสินค้าเดิม...");
-  await prisma.product.deleteMany();
+  console.log("ตรวจสอบสินค้าเริ่มต้น...");
+
 
   const products = [
     {
@@ -198,9 +161,9 @@ async function main() {
   console.log("กำลังเริ่มเพิ่มข้อมูลสินค้า...");
 
   // การใช้ createMany ใน MySQL/Postgres จะเร็วกว่าวนลูป
-  await prisma.product.createMany({
-    data: products,
-  });
+  for (const product of products) {
+    await prisma.product.upsert({ where: { slug: product.slug }, create: product, update: {} });
+  }
 }
 main()
   .catch((e) => {

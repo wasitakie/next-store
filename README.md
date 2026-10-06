@@ -13,7 +13,7 @@ NextStore คือโปรเจกต์ e-commerce สำหรับสิ�
 | กลุ่มผู้ใช้ | ลูกค้าทั่วไปและผู้ดูแลร้าน |
 | Default locale | ภาษาไทย (`th`) |
 | Secondary locale | ภาษาอังกฤษ (`en`) |
-| Core stack | Next.js, React, TypeScript, Tailwind CSS, Prisma, MySQL, NextAuth, Stripe |
+| Core stack | Next.js, React, TypeScript, Tailwind CSS, Prisma, PostgreSQL, NextAuth, Stripe |
 | Key outcome | หน้าร้านสองภาษา พร้อมตะกร้า checkout คำสั่งซื้อ และ admin dashboard |
 
 ## Problem
@@ -89,7 +89,7 @@ flowchart TD
   B --> C["Server Components"]
   B --> D["Client Components"]
   C --> E["Prisma Client"]
-  E --> F["MySQL / MariaDB"]
+  E --> F["PostgreSQL"]
   D --> G["Zustand Cart Store"]
   B --> H["NextAuth"]
   H --> E
@@ -110,7 +110,7 @@ flowchart TD
 
 - Server Actions สำหรับ cart, order และ product workflows
 - Prisma เป็น data layer กลางผ่าน `lib/prisma.ts`
-- MySQL เป็นฐานข้อมูลหลัก
+- PostgreSQL เป็นฐานข้อมูลหลัก
 - NextAuth v5 beta สำหรับ session และ provider integration
 - Stripe Checkout ใช้ direct API request เพื่อสร้าง payment session
 
@@ -139,7 +139,7 @@ flowchart TD
 - role-based admin routes
 - product management สำหรับ admin
 - order management สำหรับ admin
-- Docker setup พร้อม MySQL local service
+- Docker setup พร้อม PostgreSQL local service
 
 ## Tech Stack
 
@@ -152,7 +152,7 @@ flowchart TD
 | State | Zustand |
 | Forms / Validation | react-hook-form, zod |
 | Auth | NextAuth v5 beta, Prisma Adapter, bcryptjs |
-| Database | MySQL / MariaDB |
+| Database | PostgreSQL |
 | ORM | Prisma |
 | Payment | Stripe Checkout |
 | Package manager | pnpm |
@@ -183,14 +183,14 @@ scripts/promote-admin.ts     Admin promotion utility
 
 - Node.js 20+
 - pnpm
-- Docker, ถ้าต้องการรัน MySQL local ผ่าน `docker-compose.yml`
+- Docker, ถ้าต้องการรัน PostgreSQL local ผ่าน `docker-compose.yml`
 
 ### Environment Variables
 
 สร้างไฟล์ `.env` แล้วกำหนดค่าหลักตามนี้:
 
 ```bash
-DATABASE_URL="mysql://nextstore:nextstore1234@localhost:3308/nextstore"
+DATABASE_URL="postgresql://nextstore:nextstore_local@localhost:5433/nextstore"
 NEXTAUTH_SECRET="your-secret"
 NEXTAUTH_URL="http://localhost:3000"
 GOOGLE_CLIENT_ID=""
@@ -209,22 +209,19 @@ pnpm install
 ### Start Local Database
 
 ```bash
-docker compose up -d mysql
+docker compose up -d postgres
 ```
 
 ### Sync Database And Seed
 
 ```bash
-pnpm prisma db push
+pnpm prisma migrate deploy
 pnpm prisma generate
 pnpm db:seed
 ```
 
-หมายเหตุ: สคริปต์ `db:seed` ใน `package.json` ใช้ `.env.prod` ผ่าน `dotenv-cli` หากต้องการ seed ด้วย `.env` local สามารถใช้คำสั่งนี้แทน:
+Seed ใช้ `.env` local และเพิ่มเฉพาะสินค้าที่ยังไม่มี โดยไม่ลบหรือเขียนทับข้อมูลเดิม
 
-```bash
-pnpm prisma db seed
-```
 
 ### Run Development Server
 
@@ -296,3 +293,60 @@ flowchart LR
 ## Result
 
 NextStore แสดงภาพรวมของ e-commerce ที่ครบทั้งหน้าร้าน หลังบ้าน authentication, cart, order, stock handling, localization และ payment integration ใน codebase เดียว เหมาะสำหรับใช้เป็น portfolio case study หรือเป็นฐานสำหรับต่อยอดเป็นร้านค้าออนไลน์จริงในระดับ MVP
+
+### pgAdmin local
+
+Run `docker compose up -d pgadmin` to start pgAdmin and its PostgreSQL dependency.
+Open http://localhost:5050 and sign in with `admin@nextstore.com` / `pgadmin_local`.
+The preconfigured **Next Store Local** server connects to `postgres:5432`, database
+`nextstore`, user `nextstore`. Enter `nextstore_local` when prompted for the database
+password. pgAdmin is exposed only on localhost and saves its settings in `pgadmin_data`.
+
+To customize the initial login, set `PGADMIN_DEFAULT_EMAIL` and
+`PGADMIN_DEFAULT_PASSWORD` in `.env` before the first start. These variables do not
+change an existing account stored in the volume; use pgAdmin to change its password.
+Stop only pgAdmin with `docker compose stop pgadmin`.
+
+### PostgreSQL local and payment testing
+
+Start `docker compose up -d postgres`, then run `pnpm prisma migrate deploy`,
+`pnpm prisma generate` and `pnpm db:seed`. PostgreSQL is on localhost:5433;
+inside Docker the app uses postgres:5432. The old MySQL service and its volume
+remain untouched. Existing MySQL records are not automatically copied.
+MySQL migration history remains in `prisma/migrations`; the PostgreSQL baseline
+and future migrations live in `prisma/postgresql-migrations`.
+
+Use only a Stripe `sk_test_` key for local checkout. Forward signed Stripe events
+to `/api/stripe/webhook` (completed, async_payment_succeeded, expired), setting
+`STRIPE_WEBHOOK_SECRET` to the forwarding endpoint secret. Set
+`NEXT_PUBLIC_APP_URL` to the local server URL. Payment cancellation keeps the cart
+and pending reservation; the order page lets the buyer resume the same session.
+An expired session releases stock exactly once via the webhook. If session
+creation times out, retry the same form to reuse the order and Stripe idempotency
+key. Pending orders whose session creation never completed need reconciliation
+before stock is released; do not release a reservation for an unknown payment.
+
+Verification commands: `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm build`,
+`pnpm exec tsx tests/orders.integration.ts`. With the local app running and a
+local webhook signing secret configured, run `pnpm exec tsx tests/webhook.integration.ts`.
+These integration tests create temporary records and remove only their own fixtures.
+For local production-mode testing, run `AUTH_TRUST_HOST=true pnpm start`.
+
+### Migrate legacy MySQL/TiDB data to Supabase
+
+Use the Supabase session pooler or direct PostgreSQL connection on port 5432
+for Prisma migrations. The application and data-copy script can use the
+transaction pooler on port 6543. Apply the schema first, then perform a dry run:
+
+```bash
+DATABASE_URL="postgresql://...:5432/postgres" pnpm prisma migrate deploy
+DATABASE_URL="postgresql://...:6543/postgres" pnpm migrate:supabase -- --dry-run
+DATABASE_URL="postgresql://...:6543/postgres" pnpm migrate:supabase
+```
+
+The source defaults to `DATABASE_URL` in `.env.prod`. Override it with
+`LEGACY_DATABASE_URL` or select another dotenv file with `LEGACY_ENV_FILE`.
+The migration refuses to run when any destination business table already has
+rows, copies all application tables in one transaction, preserves primary keys,
+repairs PostgreSQL sequences, and verifies every row count after commit. It does
+not copy Prisma's MySQL migration history.

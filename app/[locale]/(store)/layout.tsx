@@ -34,7 +34,7 @@ export default function RootLayout({
   };
 
   return (
-    <div>
+    <div className="storefront bg-white text-neutral-950">
       <JsonLd data={organizationJsonLd} />
       <Navbar />
       {children}

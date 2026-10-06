@@ -52,11 +52,19 @@
     "searchResultFor": "Search: {query}",
     "clearSearch": "Clear search",
     "noSearchResults": "No products match this search.",
-    "noFilterResults": "No products match the selected filters."
+    "noFilterResults": "No products match the selected filters.",
+    "minPrice": "Minimum price",
+    "maxPrice": "Maximum price"
   },
   "LanguageSwitcher": {
     "label": "Change Language",
-    "locale": "{locale,select,en{English}th{ภาษาไทย}other{Unknown}}"
+    "locale": "{locale,select,en{English}th{ภาษาไทย}other{Unknown}}",
+    "title": "Make yourself at home",
+    "description": "Choose your language to browse products and store information.",
+    "shipping": "Free shipping on orders over ฿500",
+    "currency": "Prices and payments are in Thai baht (THB)",
+    "keepPage": "Stay on the same page when switching languages",
+    "close": "Close language settings"
   },
   "Navigation": {
     "home": "Home",
@@ -82,7 +90,16 @@
     "searchSuggestionLaptop": "Laptop",
     "searchSuggestionHeadphone": "Headphones",
     "searchSuggestionKeyboard": "Keyboard",
-    "searchSuggestionMouse": "Mouse"
+    "searchSuggestionMouse": "Mouse",
+    "shop": "Shop",
+    "mainNavigation": "Main navigation",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "allProducts": "All products",
+    "newArrivals": "New arrivals",
+    "inStock": "Ready to ship",
+    "categories": "Categories",
+    "shopCollections": "Shop from collections"
   },
   "WishlistPage": {
     "eyebrow": "Saved items",
@@ -192,7 +209,20 @@
     "phone": "Phone: 02-123-4567",
     "email": "Email: info@nextstore.com",
     "address": "Address: Bangkok, Thailand",
-    "copyright": "© 2024 NextStore. All rights reserved."
+    "copyright": "© 2024 NextStore. All rights reserved.",
+    "pages": "Pages",
+    "collections": "Collections",
+    "account": "Your account",
+    "wishlist": "Wishlist",
+    "cart": "Cart",
+    "checkout": "Checkout",
+    "login": "Sign in",
+    "register": "Create account",
+    "availability": "Product availability",
+    "stayConnected": "Stay connected with NextStore",
+    "contactDescription": "Questions about a product or your order? Get in touch with our team. We are here to help you find the right fit.",
+    "paymentNote": "Choose payment at checkout",
+    "copyrightYear": "© {year} NextStore. All rights reserved."
   },
   "Auth": {
     "loginTitle": "Login",
@@ -248,7 +278,13 @@
     "loadingDescription": "Preparing your cart details.",
     "viewCart": "View Cart",
     "totalPriceCount": "Total ({count} items)",
-    "netTotal": "Net Total"
+    "netTotal": "Net Total",
+    "decreaseQuantity": "Decrease quantity",
+    "increaseQuantity": "Increase quantity",
+    "quantityLabel": "Quantity",
+    "syncError": "Could not update the cart. Please review the items and try again.",
+    "popularItems": "Popular items",
+    "addPopularItem": "Add {name} to cart"
   },
   "OrderSuccess": {
     "status": {
@@ -287,7 +323,9 @@
     "viewHistoryButton": "View Order History",
     "backToHomeButton": "Back to Home",
     "helpTitle": "Need Help?",
-    "helpDesc": "If you have questions about your order, contact us at:"
+    "helpDesc": "If you have questions about your order, contact us at:",
+    "orderReceived": "Order details",
+    "resumePayment": "Resume payment"
   },
   "ProductDetail": {
     "breadcrumbHome": "Home",
@@ -343,7 +381,11 @@
     "freeShippingGuarantee": "Free shipping for orders over ฿500",
     "warrantyGuarantee": "7-day product warranty",
     "confirmOrder": "Confirm Order",
-    "backToCart": "← Back to Cart"
+    "backToCart": "← Back to Cart",
+    "processing": "Processing…",
+    "invalidForm": "Please check your name, address, phone and 5-digit postal code.",
+    "stockError": "Insufficient stock. Please review your cart.",
+    "checkoutError": "Checkout failed. Please retry or review your cart."
   },
   "Admin": {
     "dashboard": "Dashboard",
@@ -409,5 +451,88 @@
     "orderItemsLabel": "Order Items",
     "noItemsInOrder": "No items in this order.",
     "updateStatusLabel": "Update Status"
+  },
+  "Storefront": {
+    "heroTitle": "Everyday. Elevated.",
+    "heroDescription": "Thoughtfully selected tech for the way you work, play, and live.",
+    "newArrivals": "The latest, selected for you",
+    "collectionTitle": "All Collection",
+    "announcement": "EVERYDAY ESSENTIALS",
+    "saved": "Saved",
+    "details": "Details & care",
+    "delivery": "Delivery & support"
+  },
+  "EcomPages": {
+    "slides": {
+      "0": {
+        "title": "Made for your everyday.",
+        "description": "Thoughtfully selected essentials for work, life, and everything in between."
+      },
+      "1": {
+        "title": "Find your next favorite.",
+        "description": "Discover useful details. Make everyday moments your own."
+      },
+      "2": {
+        "title": "A fresh perspective.",
+        "description": "Explore new arrivals and the pieces that fit your life."
+      }
+    },
+    "shop": "Shop Now",
+    "discover": "Discover this piece",
+    "slide": "Show slide {number}",
+    "selection": "Everyday Favorites",
+    "categories": "Product categories",
+    "all": "All",
+    "statement": "Designed for your everyday",
+    "confidence": "Shop With Confidence",
+    "aboutIntro": "Thoughtfully selected products for modern lives and everyday confidence.",
+    "contactTitle": "Get in Touch",
+    "phone": "Phone (optional)",
+    "inquiry": "NextStore customer inquiry",
+    "prepareEmail": "Prepare Message",
+    "emailNote": "This form prepares an email draft. Open your email app to review and send it. No message is sent from this website.",
+    "draftReady": "Your draft is ready. Review it in your email app before sending.",
+    "openEmail": "Open Email App",
+    "faqTitle": "FAQs",
+    "faqIntro": "Answers to common questions about products, orders, and shopping with NextStore.",
+    "favorites": "Your Favorites",
+    "favoritesIntro": "A collection of the pieces you have saved for later, ready whenever inspiration strikes.",
+    "noFavorites": "No favorites yet…",
+    "sort": "Sort favorites",
+    "sortOptions": {
+      "saved": "Saved order",
+      "name": "Name: A–Z",
+      "priceLow": "Price: low to high",
+      "priceHigh": "Price: high to low"
+    },
+    "unavailable": "No longer available",
+    "faq": {
+      "0": {
+        "question": "How can I find the right product?",
+        "answer": "Browse categories, search by product name, and compare specifications on each product page. Contact us if you need help choosing."
+      },
+      "1": {
+        "question": "Where can I check stock?",
+        "answer": "Availability is shown on product cards and product pages. The cart checks availability again when your order is prepared."
+      },
+      "2": {
+        "question": "How do I save a product for later?",
+        "answer": "Tap the heart on any product. Your favorites are saved in this browser, so you can return to them from the wishlist."
+      },
+      "3": {
+        "question": "How do I place an order?",
+        "answer": "Add products to your cart, review quantities, then continue to checkout. Sign in when prompted and review your delivery and payment details."
+      },
+      "4": {
+        "question": "How do I ask about delivery or returns?",
+        "answer": "Contact our team with the product or order number. We can help check the delivery information and the applicable return or warranty conditions."
+      },
+      "5": {
+        "question": "How can I contact support?",
+        "answer": "Use the email or phone details above. You can also prepare an email with the contact form; include your order number for order questions."
+      }
+    },
+    "pauseSlides": "Pause slideshow",
+    "playSlides": "Play slideshow"
   }
 }

@@ -1,19 +1,14 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { fulfillStripeOrder, cancelReservedOrder, type PaymentSession } from "@/lib/orders";
 
 export const runtime = "nodejs";
 
 type StripeWebhookEvent = {
   type: string;
   data: {
-    object: {
-      payment_status?: string;
-      metadata?: {
-        orderId?: string;
-        userId?: string;
-      } | null;
-    };
+    object: PaymentSession;
   };
 };
 
@@ -76,26 +71,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  const event = JSON.parse(payload) as StripeWebhookEvent;
-
-  if (event.type === "checkout.session.completed") {
-    const checkoutSession = event.data.object;
-    const orderId = Number(checkoutSession.metadata?.orderId);
-    const userId = Number(checkoutSession.metadata?.userId);
-
-    if (checkoutSession.payment_status === "paid" && orderId && userId) {
-      await prisma.order.updateMany({
-        where: {
-          id: orderId,
-          userId,
-          status: "pending",
-        },
-        data: {
-          status: "paid",
-        },
-      });
+  let event: StripeWebhookEvent;
+  try { event = JSON.parse(payload); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
+  if (!event.data?.object) return NextResponse.json({ error: "Invalid event" }, { status: 400 });
+  const session = event.data.object;
+  if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
+    await fulfillStripeOrder(session);
+  }
+  if (event.type === "checkout.session.expired") {
+    const orderId = Number(session.metadata?.orderId);
+    const userId = Number(session.metadata?.userId);
+    if (Number.isSafeInteger(orderId) && Number.isSafeInteger(userId)) {
+      const order = await prisma.order.findFirst({ where: { id: orderId, userId, paymentMethod: "stripe", OR: [{ stripeSessionId: session.id }, { stripeSessionId: null }] } });
+      if (order) await cancelReservedOrder(order.id, userId);
     }
   }
-
   return NextResponse.json({ received: true });
 }

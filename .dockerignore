@@ -13,3 +13,6 @@ Dockerfile
 .dockerignore
 docker-compose.yml
 
+
+.playwright-cli
+output/playwright

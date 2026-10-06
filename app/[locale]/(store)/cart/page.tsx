@@ -20,6 +20,7 @@ import { CartPageSkeleton, EmptyState } from "@/components/ui/state";
 
 export default function CartPage() {
   const t = useTranslations("CartPage");
+  const syncError = useCartStore(state => state.error);
   const [mounted, setMounted] = useState(false);
   const { items, total, updateQuantity, removeItem, clearCart, fetchCart } =
     useCartStore();
@@ -68,6 +69,7 @@ export default function CartPage() {
           </p>
         </div>
 
+        {syncError && <p role="alert" className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{t("syncError")}</p>}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
@@ -76,10 +78,10 @@ export default function CartPage() {
                 key={item.id}
                 className="border border-zinc-200/80 shadow-sm bg-white"
               >
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="flex gap-4">
                     {/* Product Image */}
-                    <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden shrink-0 border border-zinc-200">
+                    <div className="w-16 h-16 sm:w-24 sm:h-24 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden shrink-0 border border-zinc-200">
                       {item.image ? (
                         <Image
                           src={item.image}
@@ -108,8 +110,8 @@ export default function CartPage() {
                     </div>
 
                     {/* Product Details */}
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div className="flex justify-between items-start mb-2">
+                    <div className="min-w-0 flex-1 flex flex-col justify-between">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:justify-between items-start mb-2">
                         <div>
                           <h3 className="font-semibold text-lg text-zinc-900 leading-tight">
                             {item.name}
@@ -126,11 +128,12 @@ export default function CartPage() {
                       </div>
 
                       {/* Quantity Controls */}
-                      <div className="flex items-center justify-between mt-4">
+                      <div className="flex flex-wrap gap-2 items-center justify-between mt-4">
                         <div className="flex items-center gap-2">
                           <div className="flex items-center border border-zinc-200 rounded-lg bg-white">
                             <button
                               type="button"
+                              aria-label={t("decreaseQuantity")}
                               onClick={() =>
                                 updateQuantity(item.id, item.quantity - 1)
                               }
@@ -140,6 +143,7 @@ export default function CartPage() {
                             </button>
                             <Input
                               type="number"
+                              aria-label={t("quantityLabel")}
                               value={item.quantity}
                               min="1"
                               className="w-16 border-0 text-center focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-800 font-semibold"
@@ -150,6 +154,7 @@ export default function CartPage() {
                               onClick={() =>
                                 updateQuantity(item.id, item.quantity + 1)
                               }
+                              aria-label={t("increaseQuantity")}
                               disabled={item.quantity >= item.stock}
                               className="p-2 hover:bg-zinc-100 rounded-r-lg cursor-pointer text-zinc-600 disabled:opacity-50"
                             >
@@ -178,7 +183,7 @@ export default function CartPage() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-8 border border-zinc-200 shadow-sm bg-white">
+            <Card className="lg:sticky lg:top-24 border border-zinc-200 shadow-sm bg-white">
               <CardHeader>
                 <CardTitle>{t("orderSummary")}</CardTitle>
               </CardHeader>

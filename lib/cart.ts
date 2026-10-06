@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
+import { getLocale } from "next-intl/server";
+import { cartItemsSchema } from "@/lib/orders";
+import { z } from "zod";
 
 export type CartItem = {
   id: number;
@@ -7,6 +10,7 @@ export type CartItem = {
   price: number;
   quantity: number;
   image?: string;
+  stock?: number;
 };
 
 export type Cart = {
@@ -22,18 +26,30 @@ export async function getCart(): Promise<Cart> {
     return { items: [], total: 0 };
   }
 
+  let lines;
   try {
-    const cartData = JSON.parse(cartCookie.value);
-    return cartData;
+    lines = cartItemsSchema.parse(JSON.parse(cartCookie.value).items);
   } catch {
     return { items: [], total: 0 };
   }
+  const locale = await getLocale();
+  const products = await prisma.product.findMany({ where: { id: { in: lines.map(i => i.id) } } });
+  const quantities = new Map<number, number>();
+  for (const line of lines) quantities.set(line.id, Math.min(999, (quantities.get(line.id) || 0) + line.quantity));
+  const items = products.map(product => ({
+    id: product.id, name: locale === "en" ? product.name_en : product.name_th,
+    price: product.price, stock: product.stock, quantity: quantities.get(product.id)!,
+    image: product.image || undefined,
+  }));
+  return { items, total: items.reduce((sum, i) => sum + Math.round(i.price * 100) * i.quantity, 0) / 100 };
 }
 
 export async function addToCart(
   productId: number,
   quantity: number = 1,
 ): Promise<Cart> {
+  z.number().int().positive().parse(productId);
+  z.number().int().min(1).max(999).parse(quantity);
   const product = await prisma.product.findUnique({
     where: { id: productId },
   });
@@ -75,10 +91,11 @@ export async function addToCart(
 
   // Save to cookie
   const cookieStore = await cookies();
-  cookieStore.set("cart", JSON.stringify(cart), {
+  cookieStore.set("cart", JSON.stringify({ items: cart.items.map(({ id, quantity }) => ({ id, quantity })) }), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: "lax",
+    path: "/",
     maxAge: 60 * 60 * 24 * 7, // 7 days
   });
 
@@ -89,7 +106,9 @@ export async function updateCartItem(
   productId: number,
   quantity: number,
 ): Promise<Cart> {
-  if (quantity <= 0) {
+  z.number().int().positive().parse(productId);
+  z.number().int().min(0).max(999).parse(quantity);
+  if (quantity === 0) {
     return removeFromCart(productId);
   }
 
@@ -117,10 +136,11 @@ export async function updateCartItem(
 
   // Save to cookie
   const cookieStore = await cookies();
-  cookieStore.set("cart", JSON.stringify(cart), {
+  cookieStore.set("cart", JSON.stringify({ items: cart.items.map(({ id, quantity }) => ({ id, quantity })) }), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: "lax",
+    path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });
 
@@ -140,10 +160,11 @@ export async function removeFromCart(productId: number): Promise<Cart> {
   if (cart.items.length === 0) {
     cookieStore.delete("cart");
   } else {
-    cookieStore.set("cart", JSON.stringify(cart), {
+    cookieStore.set("cart", JSON.stringify({ items: cart.items.map(({ id, quantity }) => ({ id, quantity })) }), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "lax",
+    path: "/",
       maxAge: 60 * 60 * 24 * 7,
     });
   }
@@ -156,72 +177,19 @@ export async function clearCart(): Promise<void> {
   cookieStore.delete("cart");
 }
 
-export async function createOrder(
-  userId: number,
-  cart: Cart,
-  options: { clearCartAfterCreate?: boolean } = {},
-) {
-  if (cart.items.length === 0) {
-    throw new Error("Cart is empty");
+// Remove only the purchased quantities, preserving products added while paying.
+export async function removePurchasedItems(orderId: number, userId: number) {
+  const order = await prisma.order.findFirst({ where: { id: orderId, userId, paymentMethod: "stripe", status: { in: ["paid", "shipped", "delivered"] } }, include: { items: true } });
+  const store = await cookies();
+  if (!order || store.get(`cart-cleared-${orderId}`)) return;
+  const cart = await getCart();
+  for (const line of order.items) {
+    const item = cart.items.find(i => i.id === line.productId);
+    if (item) item.quantity = Math.max(0, item.quantity - line.quantity);
   }
-
-  // Check stock for all items
-  for (const item of cart.items) {
-    const product = await prisma.product.findUnique({
-      where: { id: item.id },
-    });
-
-    if (!product || product.stock < item.quantity) {
-      throw new Error(`Insufficient stock for ${item.name}`);
-    }
-  }
-
-  // Create order with transaction
-  const result = await prisma.$transaction(async (tx) => {
-    // Create order
-    const order = await tx.order.create({
-      data: {
-        userId,
-        total: cart.total,
-        status: "pending",
-      },
-    });
-
-    // Create order items and update stock
-    for (const item of cart.items) {
-      await tx.orderItem.create({
-        data: {
-          orderId: order.id,
-          productId: item.id,
-          quantity: item.quantity,
-          price: item.price,
-        },
-      });
-
-      // Update product stock
-      await tx.product.update({
-        where: { id: item.id },
-        data: {
-          stock: {
-            decrement: item.quantity,
-          },
-        },
-      });
-    }
-
-    return order;
-  });
-
-  if (options.clearCartAfterCreate ?? true) {
-    await clearCart();
-  }
-
-  return result;
-}
-
-export async function markOrderPaid(orderId: number) {
-  return prisma.order.update({
-    where: { id: orderId },
-    data: { status: "paid" },
-  });
+  cart.items = cart.items.filter(i => i.quantity > 0);
+  cart.total = cart.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const options = { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" as const, path: "/", maxAge: 604800 };
+  store.set("cart", JSON.stringify({ items: cart.items.map(({ id, quantity }) => ({ id, quantity })) }), options);
+  store.set(`cart-cleared-${orderId}`, "1", options);
 }

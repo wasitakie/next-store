@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import ProductCard from "@/components/ProductCard";
 import ProductFilters from "@/components/ProductFilters";
 import { LocalizedProduct } from "@/types/product";
@@ -24,7 +24,8 @@ export default function ProductSection({
   products,
   categories,
 }: ProductSectionProps) {
-  const [filterOpen, setFilterOpen] = useState(true);
+  const [filterOpen, setFilterOpen] = useState<boolean | null>(null);
+  useEffect(() => { setFilterOpen(window.matchMedia("(min-width: 1024px)").matches); }, []);
   const t = useTranslations("ProductFilters");
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,7 +34,7 @@ export default function ProductSection({
   const category = searchParams.get("category") || "";
   const query = searchParams.get("q")?.trim() || "";
   const minPrice = Number(searchParams.get("minPrice")) || 0;
-  const maxPrice = Number(searchParams.get("maxPrice")) || Infinity;
+  const maxPrice = searchParams.has("maxPrice") ? Number(searchParams.get("maxPrice")) : Infinity;
   const stockOnly = searchParams.get("stock") === "true";
   const sort = searchParams.get("sort") || "newest";
 
@@ -53,7 +54,7 @@ export default function ProductSection({
 
     if (category) {
       result = result.filter(
-        (p) => p.category?.toLowerCase() === category.toLowerCase(),
+        (p) => [p.category, p.categoryKey, ...(p.categoryAliases || [])].some(value => value?.toLowerCase() === category.toLowerCase()),
       );
     }
 
@@ -90,21 +91,21 @@ export default function ProductSection({
   };
 
   return (
-    <div className="container mx-auto flex flex-col gap-6">
+    <div className="mx-auto flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="min-w-0">
-          <p className="text-slate-900 font-semibold dark:text-slate-50">
+          <p className="text-neutral-900 font-semibold dark:text-neutral-50">
             {filteredProducts.length} {t("productsCount")}
           </p>
           {query && (
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-600">
-              <span className="inline-flex items-center gap-2 rounded-md border border-orange-200 bg-orange-50 px-3 py-1 font-medium text-orange-700">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-neutral-600">
+              <span className="inline-flex items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1 font-medium text-neutral-700">
                 <Search className="h-3.5 w-3.5" />
                 {t("searchResultFor", { query })}
               </span>
               <button
                 type="button"
-                className="inline-flex items-center gap-1 rounded-md px-2 py-1 font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-950"
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1 font-semibold text-neutral-500 hover:bg-neutral-100 hover:text-neutral-950"
                 onClick={clearSearchQuery}
               >
                 <X className="h-3.5 w-3.5" />
@@ -116,9 +117,10 @@ export default function ProductSection({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setFilterOpen(!filterOpen)}
-          className="flex items-center gap-2 border-slate-200 bg-white transition-colors duration-200 ease-in-out dark:border-neutral-800 dark:bg-neutral-900"
-          aria-label={filterOpen ? "Hide filters" : "Show filters"}
+          onClick={() => setFilterOpen(filterOpen === null ? true : !filterOpen)}
+          className="flex items-center gap-2 border-neutral-200 bg-white transition-colors duration-200 ease-in-out dark:border-neutral-800 dark:bg-neutral-900"
+          aria-label={filterOpen ? t("hideFilters") : t("showFilters")}
+          aria-expanded={filterOpen ?? false}
         >
           {filterOpen ? (
             <>
@@ -138,12 +140,12 @@ export default function ProductSection({
       <div className="flex flex-col lg:flex-row gap-8">
         <aside
           className={`shrink-0 transition-all duration-300 ease-in-out ${
-            filterOpen ? "w-full lg:w-72 lg:opacity-100" : "hidden lg:hidden"
+            filterOpen === null ? "hidden lg:block lg:w-56" : filterOpen ? "w-full lg:w-56 lg:opacity-100" : "hidden"
           } `}
         >
           <ProductFilters categories={categories} />
         </aside>
-        <main className="flex-1 transition-all duration-300 ">
+        <div className="min-w-0 flex-1 transition-all duration-300">
           {filteredProducts.length > 0 ? (
             <ProductCard products={filteredProducts} />
           ) : (
@@ -155,7 +157,7 @@ export default function ProductSection({
               }
             />
           )}
-        </main>
+        </div>
       </div>
     </div>
   );

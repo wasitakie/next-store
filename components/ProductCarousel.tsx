@@ -2,7 +2,7 @@
 
 import { LocalizedProduct } from "@/types/product";
 import { Button } from "./ui/button";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import Image from "next/image";
 import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";

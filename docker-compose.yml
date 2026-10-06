@@ -20,6 +20,44 @@ services:
       timeout: 5s
       retries: 5
 
+  postgres:
+    image: postgres:17-alpine
+    container_name: next-store-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nextstore
+      POSTGRES_PASSWORD: nextstore_local
+      POSTGRES_DB: nextstore
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - next-store-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nextstore -d nextstore"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pgadmin:
+    image: dpage/pgadmin4:9.18
+    container_name: next-store-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@nextstore.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-pgadmin_local}
+    ports:
+      - "127.0.0.1:5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - next-store-network
+
   app:
     build:
       context: .
@@ -32,13 +70,17 @@ services:
       - .env
     ports:
       - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://nextstore:nextstore_local@postgres:5432/nextstore
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
     networks:
       - next-store-network
 
 volumes:
+  pgadmin_data:
+  postgres_data:
   mysql_data:
 
 networks:

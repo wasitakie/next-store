@@ -19,7 +19,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       number: {
         currency: {
           style: "currency",
-          currency: locale == "en" ? "GBP" : "THB",
+          currency: "THB",
           currencyDisplay: "symbol",
           maximumFractionDigits: 2,
           minimumFractionDigits: 0,

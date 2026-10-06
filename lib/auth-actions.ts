@@ -1,6 +1,7 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { signIn, signOut } from "@/lib/auth";
@@ -67,7 +68,9 @@ export async function loginUser(_: unknown, formData: FormData) {
     return { error: "Invalid credentials" };
   }
 
-  redirect("/");
+  const locale = await getLocale();
+  const callback = formData.get("callbackUrl");
+  redirect(typeof callback === "string" && /^\/(th|en)\/checkout$/.test(callback) ? callback : `/${locale}`);
 }
 
 export async function loginWithGoogle() {

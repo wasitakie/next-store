@@ -12,6 +12,8 @@ export function localizeProduct(product: PrismaProduct, locale: string): Localiz
     ...product,
     name: locale === "en" ? product.name_en || "" : product.name_th || "",
     description: locale === "en" ? product.description_en || "": product.description_th || "",
+    categoryKey: product.category_en || product.category_th || "",
+    categoryAliases: [product.category_th || "", product.category_en || ""],
     category: locale === "en" ? product.category_en || ""  : product.category_th || "",
   };
 }

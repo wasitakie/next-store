@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { markOrderPaid } from "@/lib/cart";
+import { fulfillStripeOrder } from "@/lib/orders";
+import OrderCartSync from "@/components/OrderCartSync";
 import { retrieveStripeCheckoutSession } from "@/lib/stripe";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +19,7 @@ import {
   CreditCard,
   ArrowRight,
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { localizeProduct } from "@/lib/utils";
@@ -108,11 +109,12 @@ export default async function OrderSuccessPage({
       stripeOrderId === productOrders.id &&
       stripeUserId === productOrders.userId
     ) {
-      await markOrderPaid(productOrders.id);
+      await fulfillStripeOrder(stripeSession);
       productOrders = await getOrder(productOrders.id);
     }
   }
 
+  const shipping = productOrders.shipping as Record<string, string> | null;
   const localizedItems = productOrders.items.map((item) => ({
     ...item,
     product: localizeProduct(item.product, locale),
@@ -136,6 +138,7 @@ export default async function OrderSuccessPage({
 
   return (
     <div className="min-h-screen bg-background">
+      {(productOrders.paymentMethod !== "stripe" || ["paid", "shipped", "delivered"].includes(productOrders.status)) && <OrderCartSync orderId={productOrders.id} />}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Success Header */}
         <div className="text-center mb-8">
@@ -143,7 +146,7 @@ export default async function OrderSuccessPage({
             <CheckCircle className="h-10 w-10 text-emerald-600" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {t("title")}
+            {t(productOrders.status === "paid" ? "title" : "orderReceived")}
           </h1>
           <p className="text-gray-600 mb-4">{t("thankYou")}</p>
           <p className="text-sm text-gray-500">
@@ -163,7 +166,7 @@ export default async function OrderSuccessPage({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <Badge className={getStatusColor(productOrders.status)}>
                     {t(`status.${productOrders.status}`)}
                   </Badge>
@@ -219,9 +222,8 @@ export default async function OrderSuccessPage({
                           </div>
                         )}
                       </div>
-                      <div className="flex-1">
+                      <div className="min-w-0 flex-1">
                         <h3 className="font-semibold">
-                          {format.number(item.price, "currency")}
                           {item.product.name}
                         </h3>
                         <p className="text-sm text-gray-600">
@@ -241,7 +243,7 @@ export default async function OrderSuccessPage({
                 <Separator />
                 <div className="flex justify-between font-semibold text-lg">
                   <span>{t("total")}</span>
-                  <span className="text-primary">{productOrders.total}</span>
+                  <span className="text-primary">{format.number(productOrders.total, "currency")}</span>
                 </div>
               </CardContent>
             </Card>
@@ -257,11 +259,12 @@ export default async function OrderSuccessPage({
               <CardContent>
                 <div className="space-y-2">
                   <p className="font-medium">
-                    {productOrders.user.name || productOrders.user.email}
+                    {shipping ? `${shipping.firstName} ${shipping.lastName}` : productOrders.user.name || productOrders.user.email}
                   </p>
                   <p className="text-sm text-gray-600">
-                    {productOrders.user.email}
+                    {shipping?.email || productOrders.user.email}
                   </p>
+                  {shipping && <p className="text-sm text-gray-600">{shipping.address}, {shipping.city} {shipping.postalCode}<br />{shipping.phone}</p>}
                   <p className="text-sm text-gray-600">
                     {t("orderDate")}:{" "}
                     {productOrders.createdAt.toLocaleDateString("th-TH", {
@@ -286,7 +289,7 @@ export default async function OrderSuccessPage({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-md bg-orange-50">
                       <CreditCard className="h-4 w-4 text-orange-600" />
                     </div>
@@ -297,7 +300,7 @@ export default async function OrderSuccessPage({
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-100">
                       <Package className="h-4 w-4 text-slate-600" />
                     </div>
@@ -308,7 +311,7 @@ export default async function OrderSuccessPage({
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-50">
                       <Truck className="h-4 w-4 text-emerald-600" />
                     </div>
@@ -332,9 +335,7 @@ export default async function OrderSuccessPage({
                     {t("continueShopping")}
                   </Link>
                 </Button>
-                <Button variant="outline" asChild className="w-full">
-                  <Link href="/orders">{t("viewOrderHistory")}</Link>
-                </Button>
+                {productOrders.status === "pending" && productOrders.stripeSessionId && <Button asChild variant="outline" className="w-full"><Link href={`/payment/${productOrders.id}`}>{t("resumePayment")}</Link></Button>}
                 <div className="text-center">
                   <Button variant="ghost" asChild>
                     <Link href="/">{t("backToHome")}</Link>

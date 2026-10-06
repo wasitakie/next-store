@@ -1,20 +1,11 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import StoreMotion from "@/components/storefront/StoreMotion";
 import { buildSeoMetadata } from "@/lib/seo";
-import {
-  Clock,
-  Headphones,
-  Mail,
-  MapPin,
-  MessageCircle,
-  Phone,
-  Send,
-} from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-
-const contactIcons = [Phone, Mail, MapPin] as const;
+import Image from "next/image";
+import { Plus } from "lucide-react";
+import ContactForm from "@/components/storefront/ContactForm";
+import { editorialImages } from "@/components/storefront/EditorialHero";
 
 export async function generateMetadata({
   params,
@@ -37,131 +28,20 @@ export async function generateMetadata({
 
 export default async function ContactPage() {
   const t = await getTranslations("ContactPage");
-
-  return (
-    <main className="min-h-screen bg-slate-50">
-      <section className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-          <div className="max-w-3xl">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-normal text-orange-600">
-              {t("eyebrow")}
-            </p>
-            <h1 className="text-4xl font-bold leading-tight text-slate-950 sm:text-5xl">
-              {t("title")}
-            </h1>
-            <p className="mt-5 text-lg leading-8 text-slate-600">
-              {t("description")}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_420px] lg:px-8">
-        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-          <CardContent className="p-6 sm:p-8">
-            <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-md bg-orange-50 text-orange-600">
-                <MessageCircle className="h-5 w-5" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-slate-950">
-                  {t("formTitle")}
-                </h2>
-                <p className="text-sm text-slate-500">{t("formDescription")}</p>
-              </div>
-            </div>
-
-            <form className="grid gap-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="grid gap-2 text-sm font-medium text-slate-700">
-                  {t("name")}
-                  <Input placeholder={t("namePlaceholder")} />
-                </label>
-                <label className="grid gap-2 text-sm font-medium text-slate-700">
-                  {t("email")}
-                  <Input type="email" placeholder={t("emailPlaceholder")} />
-                </label>
-              </div>
-              <label className="grid gap-2 text-sm font-medium text-slate-700">
-                {t("subject")}
-                <Input placeholder={t("subjectPlaceholder")} />
-              </label>
-              <label className="grid gap-2 text-sm font-medium text-slate-700">
-                {t("message")}
-                <textarea
-                  rows={6}
-                  placeholder={t("messagePlaceholder")}
-                  className="min-h-36 rounded-md border border-input bg-background px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                />
-              </label>
-              <Button className="mt-2 w-full bg-orange-500 text-white hover:bg-orange-600 sm:w-fit">
-                <Send className="h-4 w-4" />
-                {t("sendMessage")}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-4">
-          {[0, 1, 2].map((index) => {
-            const Icon = contactIcons[index];
-
-            return (
-              <Card
-                key={index}
-                className="rounded-md border-slate-200 bg-white shadow-sm"
-              >
-                <CardContent className="flex gap-4 p-5">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-slate-950 text-white">
-                    <Icon className="h-5 w-5 text-orange-300" />
-                  </div>
-                  <div>
-                    <h2 className="font-bold text-slate-950">
-                      {t(`channels.${index}.title`)}
-                    </h2>
-                    <p className="mt-1 text-slate-700">
-                      {t(`channels.${index}.value`)}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      {t(`channels.${index}.description`)}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-
-          <div className="rounded-md border border-slate-200 bg-slate-950 p-6 text-white">
-            <div className="mb-4 flex items-center gap-3">
-              <Clock className="h-5 w-5 text-orange-300" />
-              <h2 className="text-lg font-bold">{t("hoursTitle")}</h2>
-            </div>
-            <div className="grid gap-3 text-sm text-slate-200">
-              <div className="flex justify-between gap-4">
-                <span>{t("weekday")}</span>
-                <span className="font-semibold text-white">
-                  {t("weekdayHours")}
-                </span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span>{t("weekend")}</span>
-                <span className="font-semibold text-white">
-                  {t("weekendHours")}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-md border border-orange-200 bg-orange-50 p-5">
-            <div className="flex gap-3">
-              <Headphones className="mt-0.5 h-5 w-5 shrink-0 text-orange-600" />
-              <p className="text-sm leading-6 text-slate-700">
-                {t("supportNote")}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-  );
+  const e = await getTranslations("EcomPages");
+  return <StoreMotion className="bg-white text-neutral-950">
+    <section className="mx-auto max-w-[1600px] px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
+      <h1 className="text-5xl font-normal tracking-tight md:text-7xl">{e("contactTitle")}</h1>
+      <p className="mt-6 max-w-xl text-lg leading-8 text-neutral-500">{t("description")}</p>
+      <div className="mt-12 grid gap-12 lg:grid-cols-2 lg:gap-20">
+        <div><div className="relative aspect-[5/4] overflow-hidden rounded-xl"><Image src={editorialImages.desk} alt="" fill priority sizes="(max-width:1024px) 100vw,50vw" className="object-cover" /></div>
+          <div className="mt-8 grid gap-6 sm:grid-cols-3">{[1,0,2].map(i => <div key={i}><h2 className="text-sm text-neutral-500">{t(`channels.${i}.title`)}</h2><p className="mt-2 break-words text-sm">{i === 1 ? <a className="hover:underline" href={`mailto:${t("channels.1.value")}`}>{t("channels.1.value")}</a> : i === 0 ? <a className="hover:underline" href={`tel:${t("channels.0.value")}`}>{t("channels.0.value")}</a> : t(`channels.${i}.value`)}</p></div>)}</div>
+        </div><ContactForm email={t("channels.1.value")} />
+      </div>
+    </section>
+    <section id="faq" className="scroll-mt-8 mx-auto grid max-w-[1600px] gap-10 border-t border-neutral-200 px-5 py-16 sm:px-8 lg:grid-cols-[1fr_1.5fr] lg:px-12 lg:py-24">
+      <div><h2 className="text-4xl tracking-tight md:text-6xl">{e("faqTitle")}</h2><p className="mt-5 max-w-sm leading-7 text-neutral-500">{e("faqIntro")}</p></div>
+      <div className="divide-y divide-neutral-200">{[0,1,2,3,4,5].map(i => <details id={`faq-${i}`} key={i} className="group scroll-mt-8 py-6"><summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-lg [&::-webkit-details-marker]:hidden">{e(`faq.${i}.question`)}<Plus className="h-5 w-5 shrink-0 transition-transform group-open:rotate-45" /></summary><p className="mt-4 max-w-2xl leading-7 text-neutral-500">{e(`faq.${i}.answer`)}</p></details>)}</div>
+    </section>
+  </StoreMotion>;
 }

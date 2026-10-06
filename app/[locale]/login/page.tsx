@@ -15,6 +15,7 @@ import { Link } from "@/i18n/routing";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ErrorState } from "@/components/ui/state";
 
@@ -28,6 +29,7 @@ type LoginInput = z.infer<ReturnType<typeof getLoginSchema>>;
 
 export default function LoginPage() {
   const t = useTranslations("Auth");
+  const searchParams = useSearchParams();
   const loginSchema = getLoginSchema(t);
   const {
     register,
@@ -43,6 +45,7 @@ export default function LoginPage() {
       const formData = new FormData();
       formData.append("email", data.email);
       formData.append("password", data.password);
+      formData.append("callbackUrl", searchParams.get("callbackUrl") || "");
       formAction(formData);
     });
   };

@@ -5,6 +5,9 @@ const STRIPE_API_BASE = "https://api.stripe.com/v1";
 type StripeCheckoutSession = {
   id: string;
   url?: string | null;
+  status?: "open" | "complete" | "expired";
+  amount_total?: number | null;
+  currency?: string | null;
   payment_status?: "paid" | "unpaid" | "no_payment_required";
   metadata?: {
     orderId?: string;
@@ -41,8 +44,10 @@ async function stripeRequest<T>(path: string, init: RequestInit = {}) {
   });
 
   if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`Stripe request failed: ${detail}`);
+    const detail = await response.json().catch(() => null) as { error?: { type?: string } } | null;
+    const definitiveRejection = response.status >= 400 && response.status < 500 &&
+      response.status !== 429 && response.status !== 409 && detail?.error?.type !== "idempotency_error";
+    throw new Error(definitiveRejection ? "STRIPE_REJECTED" : "STRIPE_UNAVAILABLE");
   }
 
   return response.json() as Promise<T>;
@@ -54,17 +59,20 @@ export async function createStripeCheckoutSession({
   orderId,
   userId,
   customerEmail,
+  checkoutKey,
 }: {
   cart: Cart;
   locale: string;
   orderId: number;
   userId: number;
   customerEmail?: string | null;
+  checkoutKey: string;
 }): Promise<StripeCheckoutSession & { url: string }> {
   const params = new URLSearchParams();
   const appUrl = getAppUrl();
 
   params.set("mode", "payment");
+  params.set("payment_method_types[0]", "card");
   params.set("client_reference_id", String(orderId));
   params.set(
     "success_url",
@@ -109,6 +117,7 @@ export async function createStripeCheckoutSession({
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
+        "Idempotency-Key": `checkout-${checkoutKey}`,
       },
       body: params,
     },

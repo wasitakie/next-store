@@ -27,7 +27,7 @@ export default function CategoryTitle({
             >
               <div className="">
                 <Link
-                  href={`/${locale}?category=${cat.category}`}
+                  href={`/${locale}?category=${encodeURIComponent(cat.categoryKey || cat.category)}`}
                   className="group/card relative flex h-44 w-full items-end justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-100 transition-colors duration-200 hover:border-slate-300 md:h-56"
                 >
                   {cat.image && (

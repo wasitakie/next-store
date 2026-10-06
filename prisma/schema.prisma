@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
 }
 
 enum OrderStatus {
@@ -56,6 +56,11 @@ model Product {
 }
 
 model Order {
+  checkoutKey String? @unique
+  paymentMethod String @default("cod")
+  stripeSessionId String? @unique
+  shipping Json?
+
   id        Int         @id @default(autoincrement())
   total     Float
   status    OrderStatus @default(pending)

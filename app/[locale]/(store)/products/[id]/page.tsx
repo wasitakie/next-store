@@ -1,14 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Share2, Star, Truck } from "lucide-react";
-import Link from "next/link";
+import { Truck, ShieldCheck, ImageIcon, Plus } from "lucide-react";
+import { getTranslations, getFormatter } from "next-intl/server";
+import ProductCard from "@/components/ProductCard";
+import { Link } from "@/i18n/routing";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { localizeProduct } from "@/lib/utils";
@@ -82,6 +76,10 @@ export default async function ProductDetailPage({
     notFound();
   }
 
+  const t = await getTranslations("ProductDetail");
+  const e = await getTranslations("Storefront");
+  const home = await getTranslations("HomePage");
+  const format = await getFormatter();
   const product = localizeProduct(rawProduct, locale);
   const relatedProducts = await getRelatedProducts(
     product.category,
@@ -151,212 +149,43 @@ export default async function ProductDetailPage({
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <main className="mx-auto max-w-[1600px] px-5 pb-16 sm:px-8 lg:px-12">
       <JsonLd data={productJsonLd} />
       <JsonLd data={breadcrumbJsonLd} />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex mb-8 text-sm">
-          <Link href="/" className="text-gray-600 hover:text-gray-900">
-            หน้าแรก
-          </Link>
-          <span className="mx-2 text-gray-400">/</span>
-          <Link href="/products" className="text-gray-600 hover:text-gray-900">
-            สินค้าทั้งหมด
-          </Link>
-          <span className="mx-2 text-gray-400">/</span>
-          <span className="text-gray-900">{product.name}</span>
-        </nav>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Product Images */}
-          <div>
-            <Card className="overflow-hidden border-slate-200 shadow-none">
-              <div className="aspect-square bg-gray-100 flex items-center justify-center">
-                {product.image ? (
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    width={600}
-                    height={600}
-                    priority
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-32 h-32 text-gray-400">
-                    <svg
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      className="w-full h-full"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </div>
-                )}
-              </div>
-            </Card>
-          </div>
-
-          {/* Product Info */}
-          <div className="space-y-6">
-            <div>
-              {product.category && (
-                <Badge variant="secondary" className="mb-2">
-                  {product.category}
-                </Badge>
-              )}
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {product.name}
-              </h1>
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex items-center">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-5 h-5 ${i < 4 ? "text-yellow-400 fill-current" : "text-gray-300"}`}
-                    />
-                  ))}
-                  <span className="ml-2 text-sm text-gray-600">(4.5)</span>
-                </div>
-                <span className="text-sm text-gray-600">
-                  ขายแล้ว {Math.floor(Math.random() * 100) + 10} ชิ้น
-                </span>
-              </div>
-              <div className="flex items-baseline gap-2 mb-6">
-                <span className="text-3xl font-bold text-primary">
-                  ฿{product.price.toLocaleString()}
-                </span>
-                {product.stock > 0 ? (
-                  <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
-                    มีสินค้า
-                  </Badge>
-                ) : (
-                  <Badge variant="destructive">สินค้าหมด</Badge>
-                )}
-              </div>
-            </div>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Truck className="w-4 h-4" />
-                    <span>จัดส่งฟรีเมื่อซื้อ ฿500 ขึ้นไป</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m0 0l-2-2m2 2l-2-2m6 0a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2z"
-                      />
-                    </svg>
-                    <span>รับประกันสินค้า 7 วัน</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Actions */}
-            <div className="flex gap-3">
-              <AddToCartButton product={product} />
-              <WishlistButton
-                product={product}
-                label="บันทึก"
-                activeLabel="บันทึกแล้ว"
-                showLabel
-                size="lg"
-              />
-              <Button variant="outline" size="lg">
-                <Share2 className="w-5 h-5 mr-2" />
-                แชร์
-              </Button>
-            </div>
-
-            {/* Description */}
-            <Card>
-              <CardHeader>
-                <CardTitle>รายละเอียดสินค้า</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 leading-relaxed">
-                  {product.description ||
-                    "สินค้าคุณภาพดี ผลิตจากวัตถุดิบคุณภาพ เหมาะสำหรับการใช้งานในชีวิตประจำวัน รับประกันความพึงพอใจ 100%"}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+      <nav aria-label={t("breadcrumbAllProducts")} className="flex flex-wrap items-center gap-2 py-6 text-xs text-neutral-500">
+        <Link href="/" className="hover:text-black">{t("breadcrumbHome")}</Link><span>/</span>
+        <Link href="/products" className="hover:text-black">{t("breadcrumbAllProducts")}</Link><span>/</span>
+        <span className="text-neutral-950">{product.name}</span>
+      </nav>
+      <div className="grid items-start gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
+        <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-neutral-100">
+          {product.image ? <Image src={product.image} alt={product.name} fill priority sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover" /> : <div className="flex h-full items-center justify-center"><ImageIcon className="h-20 w-20 text-neutral-400" /></div>}
         </div>
-
-        {/* Related Products */}
-        {localizedRelatedProducts.length > 0 && (
-          <div className="mt-16">
-            <h2 className="text-2xl font-bold text-gray-900 mb-8">
-              สินค้าที่เกี่ยวข้อง
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {localizedRelatedProducts.map((relatedProduct) => (
-                <Card key={relatedProduct.id} className="group border-slate-200">
-                  <CardHeader className="p-0">
-                    <div className="flex aspect-square items-center justify-center overflow-hidden rounded-t-md bg-slate-100">
-                      {relatedProduct.image ? (
-                        <Image
-                          src={relatedProduct.image}
-                          alt={relatedProduct.name}
-                          width={300}
-                          height={300}
-                          className="h-full w-full object-cover transition-transform group-hover:scale-[1.03]"
-                        />
-                      ) : (
-                        <div className="w-16 h-16 text-gray-400">
-                          <svg
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            className="w-full h-full"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-4">
-                    <CardTitle className="text-sm font-medium mb-2 line-clamp-2">
-                      {relatedProduct.name}
-                    </CardTitle>
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-primary">
-                        ฿{relatedProduct.price.toLocaleString()}
-                      </span>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/products/${relatedProduct.slug}`}>ดู</Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+        <div className="lg:sticky lg:top-8">
+          <p className="mb-3 text-xs uppercase tracking-widest text-neutral-500">{product.category}</p>
+          <h1 className="text-3xl font-normal leading-tight tracking-tight sm:text-4xl lg:text-5xl">{product.name}</h1>
+          <p className="mt-5 text-2xl">{format.number(product.price, "currency")}</p>
+          <p className="mt-4 text-sm text-neutral-500">{product.stock > 0 ? t("inStock") : t("outOfStock")}</p>
+          {product.description && <p className="mt-6 whitespace-pre-line text-sm leading-7 text-neutral-600">{product.description}</p>}
+          <div className="my-8 flex flex-wrap gap-3">
+            <AddToCartButton product={product} />
+            <WishlistButton product={product} label={t("save")} activeLabel={e("saved")} showLabel size="lg" className="h-12 rounded-full border-neutral-300 text-neutral-950" />
           </div>
-        )}
+          <div className="grid gap-4 border-y border-neutral-200 py-6 text-sm">
+            <p className="flex items-center gap-3"><Truck className="h-5 w-5 stroke-1" />{home("freeShipping")}</p>
+            <p className="flex items-center gap-3"><ShieldCheck className="h-5 w-5 stroke-1" />{home("trustedWarranty")}</p>
+          </div>
+          <details className="group border-b border-neutral-200 py-5" open>
+            <summary className="flex cursor-pointer list-none items-center justify-between text-sm">{t("descriptionTitle")}<Plus className="h-4 w-4 transition-transform group-open:rotate-45" /></summary>
+            <p className="mt-4 whitespace-pre-line text-sm leading-7 text-neutral-500">{product.description || product.name}</p>
+          </details>
+          <details className="group border-b border-neutral-200 py-5">
+            <summary className="flex cursor-pointer list-none items-center justify-between text-sm">{e("delivery")}<Plus className="h-4 w-4 transition-transform group-open:rotate-45" /></summary>
+            <Link href="/contact" className="mt-4 inline-block text-sm underline underline-offset-4">{home("trustedWarranty")}</Link>
+          </details>
+        </div>
       </div>
-    </div>
+      {localizedRelatedProducts.length > 0 && <section className="mt-20 lg:mt-28"><h2 className="mb-9 text-3xl font-normal tracking-tight md:text-4xl">{t("relatedProducts")}</h2><ProductCard products={localizedRelatedProducts} /></section>}
+    </main>
   );
 }

@@ -8,11 +8,11 @@ This file gives AI coding agents the project-specific context needed to work saf
 
 - Framework: Next.js App Router with React and TypeScript.
 - Styling: Tailwind CSS, shadcn-style UI primitives in `components/ui`, and `lucide-react` icons.
-- Data: Prisma with MySQL/MariaDB adapter.
+- Data: Prisma with PostgreSQL adapter.
 - Auth: NextAuth v5 beta with Google and Credentials providers.
 - Cart state: Zustand store in `lib/store/useCartStore.ts` backed by server actions.
 - i18n: `next-intl` with `th` as the default locale and `en` as the secondary locale.
-- Deployment: standalone Next.js output, Docker support, and local MySQL via `docker-compose.yml`.
+- Deployment: standalone Next.js output, Docker support, and local PostgreSQL via `docker-compose.yml`.
 
 ## Important Paths
 
@@ -22,7 +22,7 @@ This file gives AI coding agents the project-specific context needed to work saf
 - `components`: shared UI and storefront components.
 - `components/ui`: reusable shadcn/Radix primitives. Prefer extending these before creating one-off UI.
 - `lib/actions`: server actions for cart, order, and product workflows.
-- `lib/prisma.ts`: singleton Prisma client with MariaDB adapter. Import this instead of creating new clients.
+- `lib/prisma.ts`: singleton Prisma client with PostgreSQL adapter. Import this instead of creating new clients.
 - `lib/auth.ts` and `auth.config.ts`: NextAuth setup and shared auth callbacks.
 - `i18n/routing.ts` and `i18n/request.ts`: locale routing and message loading.
 - `messages/th.json` and `messages/en.json`: translation catalogs. Keep keys aligned across both files.
@@ -44,7 +44,7 @@ Use `pnpm`.
 - Promote admin user: `pnpm promote-admin`
 - Docker build script: `pnpm docker-build`
 
-The app expects a database connection through `DATABASE_URL`. Local Docker MySQL exposes host port `3308` and creates database `nextstore`.
+The app expects a database connection through `DATABASE_URL`. Local Docker PostgreSQL exposes host port `5433` and creates database `nextstore`.
 
 ## Development Rules
 
@@ -70,7 +70,7 @@ The app expects a database connection through `DATABASE_URL`. Local Docker MySQL
 
 ## Database And Prisma
 
-- The schema provider is MySQL. The runtime client uses `@prisma/adapter-mariadb`.
+- The schema provider is PostgreSQL. The runtime client uses `@prisma/adapter-pg`.
 - After changing `prisma/schema.prisma`, run `pnpm prisma generate` and, for local schema sync, `pnpm prisma db push`.
 - Do not casually edit committed migrations. Add a new migration when migration history matters.
 - Preserve order price snapshots in `OrderItem.price`; do not recompute historical order totals from current product prices.

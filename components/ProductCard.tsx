@@ -1,107 +1,37 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { ImageIcon, Plus } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
-import React from "react";
+import { Link } from "@/i18n/routing";
 import { Button } from "./ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-} from "./ui/card";
 import { LocalizedProduct } from "@/types/product";
 import { useFormatter, useTranslations } from "next-intl";
 import { useCartStore } from "@/lib/store/useCartStore";
 import WishlistButton from "@/components/WishlistButton";
 
-export default function ProductCard({
-  products,
-}: {
-  products: LocalizedProduct[];
-}) {
+export default function ProductCard({ products }: { products: LocalizedProduct[] }) {
   const t = useTranslations("ProductCard");
   const format = useFormatter();
   const addItem = useCartStore((state) => state.addItem);
   return (
-    <div className="container mx-auto">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-5 xl:grid-cols-4">
-        {products.map((product, index) => (
-          <div key={product.id}>
-            <Card className="group relative h-full w-full cursor-pointer overflow-hidden border-slate-200 bg-white transition-colors duration-200 hover:border-slate-300">
-              <div className="absolute right-3 top-3 z-10 opacity-100 transition-opacity duration-200 md:opacity-0 md:group-hover:opacity-100">
-                <WishlistButton
-                  product={product}
-                  label={t("addToWishlist")}
-                  activeLabel={t("removeFromWishlist")}
-                  className="h-9 w-9 rounded-md"
-                />
-              </div>
-              <div className="absolute top-3 left-3 z-10">
-                <div className="rounded-md border border-orange-200 bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-700">
-                  {product.stock === 0
-                    ? t("outOfStock")
-                    : product.stock <= 5
-                      ? t("lowStock")
-                      : t("readyToShip")}
-                </div>
-              </div>
-              <Link href={`/products/${product.slug}`} className="block">
-                <div className="relative h-52 w-full overflow-hidden bg-slate-100">
-                  <Image
-                    src={product.image || ""}
-                    alt={product.name}
-                    fill
-                    loading={index < 4 ? "eager" : "lazy"}
-                    priority={index < 4}
-                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                    className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
-                  />
-                  {product.stock === 0 && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/75 backdrop-blur-[1px]">
-                      <p className="rounded-md bg-slate-950 px-3 py-1.5 text-sm font-semibold text-white">
-                        {t("outOfStock")}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </Link>
-              <CardContent className="flex grow flex-col justify-between gap-3 p-4">
-                {product.category && (
-                  <span className="text-xs font-semibold uppercase text-slate-500">
-                    {product.category}
-                  </span>
-                )}
-                <Link href={`/products/${product.slug}`} className="block">
-                  <h3 className="line-clamp-2 text-base font-semibold leading-tight text-slate-950 transition-colors duration-200 group-hover:text-orange-600">
-                    {product.name}
-                  </h3>
-                </Link>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="text-xl font-bold text-slate-950">
-                      {format.number(product.price, "currency")}
-                    </div>
-                  </div>
-                  <span className="text-xs font-semibold text-emerald-600">
-                    {product.stock > 0 ? t("readyToShip") : t("outOfStock")}
-                  </span>
-                </div>
-              </CardContent>
-              <CardFooter className="p-4 pt-0">
-                <Button
-                  disabled={product.stock === 0}
-                  className="h-10 w-full cursor-pointer"
-                  onClick={() => addItem(product)}
-                >
-                  <Plus className="h-4 w-4" />
-                  {t("AddToCart")}
-                </Button>
-              </CardFooter>
-            </Card>
+    <div className="grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-3 xl:grid-cols-4">
+      {products.map((product) => (
+        <article key={product.id} className="group flex min-w-0 flex-col">
+          <div className="relative overflow-hidden rounded-xl bg-neutral-100">
+            <Link href={`/products/${product.slug}`} className="relative block aspect-[3/4]">
+              {product.image ? <Image src={product.image} alt={product.name} fill sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw" className="object-cover transition-transform duration-500 motion-safe:group-hover:scale-105" /> : <span className="flex h-full items-center justify-center"><ImageIcon className="h-12 w-12 text-neutral-400" aria-label={product.name} /></span>}
+            </Link>
+            <span className="pointer-events-none absolute left-2 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-medium sm:left-3 sm:text-xs">{product.stock <= 0 ? t("outOfStock") : product.stock <= 5 ? t("lowStock") : t("readyToShip")}</span>
+            <div className="absolute bottom-3 right-3"><WishlistButton product={product} label={t("addToWishlist")} activeLabel={t("removeFromWishlist")} className="h-9 w-9 rounded-full border-0 bg-white text-neutral-950 hover:bg-neutral-100" /></div>
           </div>
-        ))}
-      </div>
+          <div className="flex flex-1 flex-col pt-4">
+            <p className="mb-1 text-xs text-neutral-500">{product.category}</p>
+            <Link href={`/products/${product.slug}`} className="hover:underline"><h3 className="line-clamp-2 text-sm leading-relaxed sm:text-base">{product.name}</h3></Link>
+            <p className="mt-2 text-sm font-medium sm:text-base">{format.number(product.price, "currency")}</p>
+            <Button disabled={product.stock <= 0} variant="outline" className="mt-4 h-10 w-full rounded-full border-neutral-300 bg-white text-xs text-neutral-950 hover:bg-neutral-950 hover:text-white sm:text-sm" onClick={() => addItem(product)}><Plus className="h-4 w-4" />{t("AddToCart")}</Button>
+          </div>
+        </article>
+      ))}
     </div>
   );
 }

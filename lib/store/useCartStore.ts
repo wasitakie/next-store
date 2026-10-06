@@ -17,7 +17,15 @@ export interface CartItem {
   stock: number;
 }
 
+let mutationQueue: Promise<unknown> = Promise.resolve();
+function serialize<T>(operation: () => Promise<T>): Promise<T> {
+  const next = mutationQueue.then(operation, operation);
+  mutationQueue = next.catch(() => undefined);
+  return next;
+}
+
 interface CartState {
+  error: boolean;
   items: CartItem[];
   total: number;
   isOpen: boolean;
@@ -32,6 +40,7 @@ interface CartState {
 }
 
 export const useCartStore = create<CartState>((set, get) => ({
+  error: false,
   items: [],
   total: 0,
   isOpen: false,
@@ -53,7 +62,7 @@ export const useCartStore = create<CartState>((set, get) => ({
           price: item.price,
           quantity: item.quantity,
           image: item.image,
-          stock: 99, // Fallback, will be constrained by product additions
+          stock: item.stock ?? 0,
         })),
         total: cart.total,
         isInitialized: true,
@@ -66,7 +75,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   addItem: async (product, quantity = 1) => {
-    const items = [...get().items];
+    const items = get().items.map(item => ({ ...item }));
     const existingIndex = items.findIndex((item) => item.id === product.id);
 
     if (existingIndex >= 0) {
@@ -91,13 +100,15 @@ export const useCartStore = create<CartState>((set, get) => ({
       (sum, item) => sum + item.price * item.quantity,
       0,
     );
-    set({ items, total: newTotal, isOpen: true }); // Open the drawer immediately on addition
+    set({ error: false, items, total: newTotal, isOpen: true }); // Open the drawer immediately on addition
 
     try {
-      await addToCart(product.id, quantity);
+      await serialize(() => addToCart(product.id, quantity));
+      await get().fetchCart();
     } catch (error) {
+      set({ error: true });
       console.error("Failed to sync add to cart:", error);
-      get().fetchCart(); // Fallback to server state
+      await get().fetchCart(); // Fallback to server state
     }
   },
 
@@ -107,7 +118,7 @@ export const useCartStore = create<CartState>((set, get) => ({
       return;
     }
 
-    const items = [...get().items];
+    const items = get().items.map(item => ({ ...item }));
     const item = items.find((item) => item.id === productId);
     if (!item) return;
 
@@ -120,13 +131,15 @@ export const useCartStore = create<CartState>((set, get) => ({
       (sum, item) => sum + item.price * item.quantity,
       0,
     );
-    set({ items, total: newTotal });
+    set({ error: false, items, total: newTotal });
 
     try {
-      await updateCartItem(productId, quantity);
+      await serialize(() => updateCartItem(productId, quantity));
+      await get().fetchCart();
     } catch (error) {
+      set({ error: true });
       console.error("Failed to sync update quantity:", error);
-      get().fetchCart();
+      await get().fetchCart();
     }
   },
 
@@ -136,24 +149,26 @@ export const useCartStore = create<CartState>((set, get) => ({
       (sum, item) => sum + item.price * item.quantity,
       0,
     );
-    set({ items, total: newTotal });
+    set({ error: false, items, total: newTotal });
 
     try {
-      await removeFromCart(productId);
+      await serialize(() => removeFromCart(productId));
     } catch (error) {
+      set({ error: true });
       console.error("Failed to sync remove item:", error);
-      get().fetchCart();
+      await get().fetchCart();
     }
   },
 
   clearCart: async () => {
-    set({ items: [], total: 0 });
+    set({ error: false, items: [], total: 0 });
 
     try {
-      await clearCart();
+      await serialize(() => clearCart());
     } catch (error) {
+      set({ error: true });
       console.error("Failed to sync clear cart:", error);
-      get().fetchCart();
+      await get().fetchCart();
     }
   },
 }));

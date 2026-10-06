@@ -1,5 +1,7 @@
-import { getCart, createOrder, clearCart } from "@/lib/cart";
-import { createStripeCheckoutSession } from "@/lib/stripe";
+import { getCart } from "@/lib/cart";
+import { randomUUID } from "node:crypto";
+import CheckoutForm, { CheckoutSubmit } from "@/components/CheckoutForm";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Truck, CreditCard, MapPin, User, ShieldCheck } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
@@ -41,44 +43,6 @@ export async function generateMetadata({
   });
 }
 
-async function createOrderAction(formData: FormData) {
-  "use server";
-
-  const session = await auth();
-  const userId = session?.user?.id ? Number(session.user.id) : null;
-
-  if (!userId) {
-    redirect("/login");
-  }
-
-  const cart = await getCart();
-  const paymentMethod = formData.get("paymentMethod")?.toString() || "stripe";
-
-  if (cart.items.length === 0) {
-    throw new Error("Cart is empty");
-  }
-
-  const order = await createOrder(userId, cart, {
-    clearCartAfterCreate: paymentMethod !== "stripe",
-  });
-
-  if (paymentMethod === "stripe") {
-    const locale = formData.get("locale")?.toString() || "th";
-    const stripeSession = await createStripeCheckoutSession({
-      cart,
-      locale,
-      orderId: order.id,
-      userId,
-      customerEmail: session?.user?.email,
-    });
-
-    await clearCart();
-    redirect(stripeSession.url);
-  }
-
-  redirect(`/order-success/${order.id}`);
-}
-
 export default async function CheckoutPage({
   params,
 }: {
@@ -90,7 +54,7 @@ export default async function CheckoutPage({
   const cart = await getCart();
 
   if (cart.items.length === 0) {
-    redirect("/cart");
+    redirect(`/${locale}/cart`);
   }
 
   return (
@@ -103,6 +67,9 @@ export default async function CheckoutPage({
           <p className="text-gray-600">{t("description")}</p>
         </div>
 
+        <CheckoutForm>
+        <input type="hidden" name="locale" value={locale} />
+        <input type="hidden" name="checkoutKey" value={randomUUID()} />
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
             <Card>
@@ -140,6 +107,7 @@ export default async function CheckoutPage({
                   <Input
                     id="phone"
                     name="phone"
+                    pattern={String.raw`[+0-9\s\(\)\-]{8,25}`}
                     type="tel"
                     placeholder="08xxxxxxxx"
                     required
@@ -181,6 +149,7 @@ export default async function CheckoutPage({
                     <Input
                       id="postalCode"
                       name="postalCode"
+                    inputMode="numeric" pattern="[0-9]{5}" maxLength={5}
                       placeholder={t("postalCodePlaceholder")}
                       required
                     />
@@ -207,7 +176,7 @@ export default async function CheckoutPage({
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 hover:bg-primary/10">
+                  <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 has-[:checked]:border-primary/30 has-[:checked]:bg-primary/5">
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -228,26 +197,26 @@ export default async function CheckoutPage({
                       </p>
                     </div>
                   </label>
-                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-4 hover:bg-accent">
+                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-4 has-[:checked]:border-primary/30 has-[:checked]:bg-primary/5">
                     <input
                       type="radio"
                       name="paymentMethod"
                       value="cod"
                       className="text-primary"
                     />
-                    <div className="flex-1">
+                    <div className="min-w-0 flex-1">
                       <p className="font-medium">{t("cod")}</p>
                       <p className="text-sm text-gray-600">{t("codDesc")}</p>
                     </div>
                   </label>
-                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-4 hover:bg-accent">
+                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-4 has-[:checked]:border-primary/30 has-[:checked]:bg-primary/5">
                     <input
                       type="radio"
                       name="paymentMethod"
                       value="transfer"
                       className="text-primary"
                     />
-                    <div className="flex-1">
+                    <div className="min-w-0 flex-1">
                       <p className="font-medium">{t("bankTransfer")}</p>
                       <p className="text-sm text-gray-600">
                         {t("bankTransferDesc")}
@@ -260,7 +229,7 @@ export default async function CheckoutPage({
           </div>
 
           <div className="lg:col-span-1">
-            <Card className="sticky top-8">
+            <Card className="lg:sticky lg:top-24">
               <CardHeader>
                 <CardTitle>{t("orderSummary")}</CardTitle>
               </CardHeader>
@@ -281,7 +250,7 @@ export default async function CheckoutPage({
                           <CreditCard className="h-8 w-8 text-gray-400" />
                         )}
                       </div>
-                      <div className="flex-1">
+                      <div className="min-w-0 flex-1">
                         <h4 className="line-clamp-1 text-sm font-medium">
                           {item.name}
                         </h4>
@@ -333,15 +302,10 @@ export default async function CheckoutPage({
               </CardContent>
               <CardFooter className="flex-col gap-3">
                 {session?.user ? (
-                  <form action={createOrderAction} className="w-full">
-                    <input type="hidden" name="locale" value={locale} />
-                    <Button type="submit" className="w-full" size="lg">
-                      {t("confirmOrder")}
-                    </Button>
-                  </form>
+<CheckoutSubmit />
                 ) : (
                   <Button size="lg" className="w-full" asChild>
-                    <Link href="/login">{t("confirmOrder")}</Link>
+                    <Link href={{ pathname: "/login", query: { callbackUrl: `/${locale}/checkout` } }}>{t("confirmOrder")}</Link>
                   </Button>
                 )}
                 <Button variant="ghost" asChild>
@@ -351,6 +315,7 @@ export default async function CheckoutPage({
             </Card>
           </div>
         </div>
+        </CheckoutForm>
       </div>
     </div>
   );

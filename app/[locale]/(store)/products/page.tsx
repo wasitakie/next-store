@@ -1,5 +1,7 @@
 import ProductSection from "@/components/ProductSection";
 import React from "react";
+import StoreHero from "@/components/StoreHero";
+import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { localizeProduct } from "@/lib/utils";
 import JsonLd from "@/components/JsonLd";
@@ -32,6 +34,7 @@ export default async function ProductsPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const t = await getTranslations("Storefront");
   const rawProducts = await prisma.product.findMany();
   const products = rawProducts.map((p) => localizeProduct(p, locale));
   const itemListJsonLd = {
@@ -46,9 +49,10 @@ export default async function ProductsPage({
   };
 
   return (
-    <div className="bg-background px-4 py-10 sm:px-6 lg:px-8">
+    <main>
       <JsonLd data={itemListJsonLd} />
-      <ProductSection products={products} categories={products} />
-    </div>
+      <StoreHero title={t("collectionTitle")} cta={t("collectionTitle")} product={products.find(p => p.image && p.categoryKey?.toLowerCase() === "electronics") ?? products.find(p => p.image)} collection />
+      <div className="mx-auto max-w-[1600px] px-5 py-12 sm:px-8 lg:px-12"><ProductSection products={products} categories={products} /></div>
+    </main>
   );
 }

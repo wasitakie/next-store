@@ -1,4 +1,7 @@
+import { localizeProduct } from "@/lib/utils";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { getLocale } from "next-intl/server";
 import { getTranslations } from "next-intl/server";
 import NavbarClient, { type NavbarUser } from "@/components/NavbarClient";
 
@@ -7,6 +10,23 @@ const navKeys = ["home", "products", "about", "contact"] as const;
 export default async function Navbar() {
   const session = await auth();
   const t = await getTranslations("Navigation");
+  const locale = await getLocale();
+  const products = await prisma.product.findMany({
+    select: { category_en: true, category_th: true, image: true },
+    orderBy: { createdAt: "desc" },
+  });
+  const categories = [...new Map(products.flatMap(product => {
+    const key = product.category_en || product.category_th;
+    if (!key) return [];
+    const name = (locale === "en" ? product.category_en : product.category_th) || key;
+    return [[key, { key, name, image: product.image }] as const];
+  })).values()];
+
+  const popularProducts = (await prisma.product.findMany({
+    where: { stock: { gt: 0 } },
+    orderBy: [{ orderItems: { _count: "desc" } }, { createdAt: "desc" }, { id: "asc" }],
+    take: 8,
+  })).map(product => localizeProduct(product, locale));
 
   const user: NavbarUser | null = session?.user
     ? {
@@ -20,12 +40,14 @@ export default async function Navbar() {
   return (
     <NavbarClient
       user={user}
+      categories={categories}
+      popularProducts={popularProducts}
       links={navKeys.map((key) => ({
         label: t(key),
         href: key === "home" ? "/" : `/${key}`,
       }))}
       labels={{
-        brand: "Store",
+        brand: "NextStore",
         manageProducts: t("manageProducts"),
         profile: t("profile"),
         billing: t("billing"),

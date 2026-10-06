@@ -49,8 +49,8 @@ export default function WishlistButton({
       }}
       className={cn(
         active
-          ? "border-orange-500 bg-orange-500 text-white hover:bg-orange-600"
-          : "border-slate-200 bg-white text-slate-700 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600",
+          ? "border-neutral-500 bg-neutral-950 text-white hover:bg-neutral-800"
+          : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-600",
         className,
       )}
     >
