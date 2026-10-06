@@ -162,7 +162,7 @@ export default function NavbarClient({
           <div className="hidden lg:block">
             <NavbarWishlistLink label={labels.wishlist} />
           </div>
-          <ShopingCart popularProducts={[]} />
+          <ShopingCart popularProducts={popularProducts} />
           <div className="ml-1 hidden lg:block">
             <LanguageSwitcher compact />
           </div>
